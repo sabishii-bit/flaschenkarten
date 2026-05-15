@@ -1,3 +1,11 @@
+<script setup lang="ts">
+import { buttonVariants, type ButtonVariant } from './variants.ts'
+
+defineProps<{
+  variant?: ButtonVariant
+}>()
+</script>
+
 <template>
   <button
     v-bind="$attrs"
@@ -9,11 +17,3 @@
     <slot />
   </button>
 </template>
-
-<script setup lang="ts">
-import { buttonVariants, type ButtonVariant } from './variants.ts'
-
-defineProps<{
-  variant?: ButtonVariant
-}>()
-</script>

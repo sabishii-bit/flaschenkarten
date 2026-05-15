@@ -78,3 +78,11 @@ body { margin: 0; }
 @utility animate-slide-up {
   animation: slide-up 0.5s ease-out both;
 }
+
+/* 3D card flip */
+@utility preserve-3d {
+  transform-style: preserve-3d;
+}
+@utility rotate-y-180 {
+  transform: rotateY(180deg);
+}

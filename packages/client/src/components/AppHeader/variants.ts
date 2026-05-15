@@ -1,10 +1,9 @@
 export interface NavLink {
   label: string
-  href: string
+  to: string
 }
 
 export const navLinks: NavLink[] = [
-  { label: 'Cards', href: '#' },
-  { label: 'Decks', href: '#' },
-  { label: 'Play',  href: '#' },
+  { label: 'Decks',  to: '/decks'     },
+  { label: 'Create', to: '/decks/new' },
 ]

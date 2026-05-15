@@ -7,17 +7,17 @@ export interface Feature {
 export const features: Feature[] = [
   {
     icon: '⬡',
-    title: 'Card Forge',
-    description: 'Design and mint custom cards with full rule definitions and metadata.',
+    title: 'Build Decks',
+    description: 'Create flashcard decks on any subject. Rich text, images, and custom fields supported.',
   },
   {
     icon: '◈',
-    title: 'Deck Builder',
-    description: 'Construct decks from your collection. Analyse synergies before you play.',
+    title: 'Spaced Repetition',
+    description: 'Study with an algorithm that surfaces cards right before you forget them.',
   },
   {
     icon: '▸',
-    title: 'Live Play',
-    description: 'Real-time multiplayer sessions with state synced to the server.',
+    title: 'Share & Discover',
+    description: 'Publish your decks for others to study. Import decks built by the community.',
   },
 ]

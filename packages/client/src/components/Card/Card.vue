@@ -1,3 +1,9 @@
+<script setup lang="ts">
+import { cardBase, cardGlow, type CardProps } from './variants.ts'
+
+defineProps<CardProps>()
+</script>
+
 <template>
   <div :class="[cardBase, glowOnHover && cardGlow]">
     <!-- Corner accents -->
@@ -9,9 +15,3 @@
     <slot />
   </div>
 </template>
-
-<script setup lang="ts">
-import { cardBase, cardGlow, type CardProps } from './variants.ts'
-
-defineProps<CardProps>()
-</script>
