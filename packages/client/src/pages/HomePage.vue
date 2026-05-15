@@ -12,8 +12,8 @@ import FlashCard from '../components/FlashCard/FlashCard.vue'
       title-bottom="KARTEN"
       subtitle="Build decks. Study smarter. Share knowledge."
       :buttons="[
-        { label: 'Browse Decks', variant: 'primary' },
-        { label: 'Create a Deck', variant: 'ghost' },
+        { label: 'Browse Decks',  variant: 'primary', to: '/decks'     },
+        { label: 'Create a Deck', variant: 'ghost',   to: '/decks/new' },
       ]"
     />
     <FeatureGrid />

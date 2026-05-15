@@ -14,6 +14,11 @@ const router = createRouter({
       component: () => import('../pages/DecksPage.vue'),
     },
     {
+      path: '/my-decks',
+      name: 'my-decks',
+      component: () => import('../pages/MyDecksPage.vue'),
+    },
+    {
       path: '/decks/new',
       name: 'decks-new',
       component: () => import('../pages/CreateDeckPage.vue'),
@@ -22,6 +27,11 @@ const router = createRouter({
       path: '/decks/:id',
       name: 'deck-detail',
       component: () => import('../pages/DeckDetailPage.vue'),
+    },
+    {
+      path: '/decks/:id/edit',
+      name: 'deck-edit',
+      component: () => import('../pages/EditDeckPage.vue'),
     },
     {
       path: '/decks/:id/study',

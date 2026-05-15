@@ -18,13 +18,13 @@ defineProps<HeroSectionProps>()
       {{ subtitle }}
     </p>
     <div class="flex gap-4 justify-center flex-wrap">
-      <Button
+      <RouterLink
         v-for="btn in buttons"
         :key="btn.label"
-        :variant="btn.variant"
+        :to="btn.to"
       >
-        {{ btn.label }}
-      </Button>
+        <Button :variant="btn.variant">{{ btn.label }}</Button>
+      </RouterLink>
     </div>
   </section>
 </template>

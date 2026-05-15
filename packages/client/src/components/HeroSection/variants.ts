@@ -1,6 +1,7 @@
 export interface HeroButton {
   label: string
   variant: 'primary' | 'ghost'
+  to: string
 }
 
 export interface HeroSectionProps {

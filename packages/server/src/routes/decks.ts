@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { eq, asc } from 'drizzle-orm'
+import { eq, asc, desc } from 'drizzle-orm'
 import { db } from '../db/index.js'
 import { decks, flashCards } from '../db/schema.js'
 import { getIp } from '../lib/getIp.js'
@@ -17,6 +17,17 @@ const CreateDeckBodySchema = z.object({
 })
 
 export const deckRoutes = new Hono()
+
+// GET /api/decks — list all public decks, newest first
+deckRoutes.get('/', async (c) => {
+  const rows = await db
+    .select()
+    .from(decks)
+    .where(eq(decks.isPublic, true))
+    .orderBy(desc(decks.createdAt))
+
+  return c.json<ApiResponse<Deck[]>>({ data: rows as Deck[] })
+})
 
 // POST /api/decks — create a deck with cards
 deckRoutes.post('/', async (c) => {
@@ -63,6 +74,59 @@ deckRoutes.get('/mine', async (c) => {
     .where(eq(decks.authorId, authorId))
 
   return c.json<ApiResponse<Deck[]>>({ data: rows as Deck[] })
+})
+
+// PUT /api/decks/:id — replace deck metadata and all cards (owner only)
+deckRoutes.put('/:id', async (c) => {
+  const id       = c.req.param('id')
+  const authorId = getIp(c)
+
+  const [existing] = await db.select().from(decks).where(eq(decks.id, id))
+  if (!existing) {
+    return c.json<ApiResponse<never>>(
+      { data: undefined as never, error: 'Deck not found' },
+      404,
+    )
+  }
+  if (existing.authorId !== authorId) {
+    return c.json<ApiResponse<never>>(
+      { data: undefined as never, error: 'Forbidden' },
+      403,
+    )
+  }
+
+  const parsed = CreateDeckBodySchema.safeParse(await c.req.json())
+  if (!parsed.success) {
+    return c.json<ApiResponse<never>>(
+      { data: undefined as never, error: 'Invalid request body' },
+      400,
+    )
+  }
+
+  const { title, description, isPublic, cards: cardEntries } = parsed.data
+
+  const deck = await db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(decks)
+      .set({ title, description, isPublic })
+      .where(eq(decks.id, id))
+      .returning()
+
+    await tx.delete(flashCards).where(eq(flashCards.deckId, id))
+
+    await tx.insert(flashCards).values(
+      cardEntries.map((card, position) => ({
+        deckId: id,
+        front:  card.front,
+        back:   card.back,
+        position,
+      })),
+    )
+
+    return updated
+  })
+
+  return c.json<ApiResponse<Deck>>({ data: deck as Deck })
 })
 
 // GET /api/decks/:id — get a single deck with its cards

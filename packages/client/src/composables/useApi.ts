@@ -8,17 +8,23 @@ export function useApi() {
       },
     })
 
-    const body = await res.json()
-    if (!res.ok) throw new Error(body.error ?? `Request failed: ${res.status}`)
-    return body.data as T
+    let body: { data: T; error?: string } | undefined
+    try {
+      body = await res.json()
+    } catch {
+      throw new Error(`Server error ${res.status}: empty or invalid response`)
+    }
+
+    if (!res.ok) throw new Error(body?.error ?? `Request failed: ${res.status}`)
+    return body!.data
   }
 
   function get<T>(path: string) {
     return request<T>(path)
   }
 
-  function post<T>(path: string, data: unknown) {
-    return request<T>(path, { method: 'POST', body: JSON.stringify(data) })
+  function post<T>(path: string, data: unknown, method: 'POST' | 'PUT' = 'POST') {
+    return request<T>(path, { method, body: JSON.stringify(data) })
   }
 
   return { get, post }
