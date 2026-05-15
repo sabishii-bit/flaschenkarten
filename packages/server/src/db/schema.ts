@@ -1,5 +1,11 @@
 import { pgTable, text, boolean, integer, timestamp } from 'drizzle-orm/pg-core'
 
+export const bannedIps = pgTable('banned_ips', {
+  ip:        text('ip').primaryKey(),
+  reason:    text('reason').notNull().default(''),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
 const timestamps = {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdate(() => new Date()),

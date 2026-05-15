@@ -1,18 +1,26 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import Button from '../components/Button/Button.vue'
 import TextInput from '../components/TextInput/TextInput.vue'
 import TextArea from '../components/TextArea/TextArea.vue'
 import CardEditor from '../components/CardEditor/CardEditor.vue'
 import FlashCard from '../components/FlashCard/FlashCard.vue'
+import { useApi } from '../composables/useApi.ts'
+import type { Deck } from '@flaschenkarten/shared'
 
 interface CardEntry { front: string; back: string }
+
+const router      = useRouter()
+const { post }    = useApi()
 
 const title       = ref('')
 const description = ref('')
 const isPublic    = ref(true)
 const cards       = ref<CardEntry[]>([{ front: '', back: '' }])
 const activeIndex = ref(0)
+const saving      = ref(false)
+const saveError   = ref<string | null>(null)
 
 const activeCard = computed(() => cards.value[activeIndex.value] ?? { front: '', back: '' })
 
@@ -36,13 +44,23 @@ function updateCard(i: number, updated: CardEntry) {
   cards.value[i] = updated
 }
 
-function saveDeck() {
-  console.log({
-    title: title.value,
-    description: description.value,
-    isPublic: isPublic.value,
-    cards: cards.value,
-  })
+async function saveDeck() {
+  if (!canSave.value || saving.value) return
+  saving.value = true
+  saveError.value = null
+  try {
+    const deck = await post<Deck>('/api/decks', {
+      title:       title.value,
+      description: description.value,
+      isPublic:    isPublic.value,
+      cards:       cards.value.filter(c => c.front.trim() || c.back.trim()),
+    })
+    router.push(`/decks/${deck.id}`)
+  } catch (e) {
+    saveError.value = e instanceof Error ? e.message : 'Something went wrong'
+  } finally {
+    saving.value = false
+  }
 }
 </script>
 
@@ -125,9 +143,10 @@ function saveDeck() {
         <div class="border-t border-cyber-border" />
 
         <!-- Save -->
-        <div class="flex justify-end">
-          <Button variant="primary" :disabled="!canSave" @click="saveDeck">
-            Save Deck
+        <div class="flex flex-col items-end gap-2">
+          <p v-if="saveError" class="font-mono-cyber text-xs text-red-400">{{ saveError }}</p>
+          <Button variant="primary" :disabled="!canSave || saving" @click="saveDeck">
+            {{ saving ? 'Saving…' : 'Save Deck' }}
           </Button>
         </div>
       </div>
