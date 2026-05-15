@@ -2,15 +2,14 @@
   "name": "flaschenkarten",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"pnpm --filter @flaschenkarten/server dev\" \"pnpm --filter @flaschenkarten/client dev\"",
+    "dev": "python dev.py",
     "dev:client": "pnpm --filter @flaschenkarten/client dev",
     "dev:server": "pnpm --filter @flaschenkarten/server dev",
     "build": "pnpm --filter @flaschenkarten/shared build && pnpm --filter @flaschenkarten/client build && pnpm --filter @flaschenkarten/server build"
   },
-  "devDependencies": {
-    "concurrently": "^9.0.0"
-  },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }

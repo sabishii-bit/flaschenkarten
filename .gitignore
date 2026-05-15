@@ -3,9 +3,15 @@ node_modules/
 dist/
 *.log
 
+# Env files — .development is committed, all others are not
 .env
 .env.local
 .env.*.local
+.env.production
+packages/server/.env.production
+packages/server/.env.*.local
+packages/client/.env.production
+packages/client/.env.*.local
 
 # OS
 .DS_Store
