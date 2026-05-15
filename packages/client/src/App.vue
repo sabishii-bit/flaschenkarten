@@ -1,7 +1,5 @@
-<script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <HelloWorld />
+  <main class="min-h-screen flex items-center justify-center">
+    <p class="text-2xl font-semibold">Flaschenkarten</p>
+  </main>
 </template>

@@ -1,18 +1,22 @@
-import express from 'express';
+import { serve } from '@hono/node-server';
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import type { ApiResponse } from '@flaschenkarten/shared';
 
-const app = express();
-const PORT = process.env.PORT ?? 3000;
+const app = new Hono();
+const PORT = Number(process.env.PORT ?? 3000);
 
-app.use(express.json());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN ?? '*',
+}));
 
-app.get('/api/health', (_req, res) => {
+app.get('/api/health', (c) => {
   const response: ApiResponse<{ status: string }> = {
     data: { status: 'ok' },
   };
-  res.json(response);
+  return c.json(response);
 });
 
-app.listen(PORT, () => {
+serve({ fetch: app.fetch, port: PORT }, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
