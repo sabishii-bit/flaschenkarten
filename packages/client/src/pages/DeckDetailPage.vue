@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useApi } from '../composables/useApi.ts'
 import Button from '../components/Button/Button.vue'
+import FlashCard from '../components/FlashCard/FlashCard.vue'
 import type { DeckWithCards } from '@flaschenkarten/shared'
 
 const route  = useRoute()
@@ -50,8 +51,29 @@ onMounted(async () => {
         </RouterLink>
       </div>
 
-      <div class="font-mono-cyber text-cyber-muted text-sm text-center py-24 mt-10 border border-dashed border-cyber-border rounded-lg">
-        // card list coming soon
+      <!-- Card grid -->
+      <div class="mt-10">
+        <p class="font-mono-cyber text-cyber-muted text-xs tracking-[0.2em] uppercase mb-4">
+          Cards — {{ deck.cards.length }}
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <FlashCard
+            v-for="card in deck.cards"
+            :key="card.id"
+            size="sm"
+          >
+            <template #front>
+              <span class="font-mono-cyber text-cyber-white text-sm text-center leading-relaxed">
+                {{ card.front }}
+              </span>
+            </template>
+            <template #back>
+              <span class="font-mono-cyber text-cyber-white text-sm text-center leading-relaxed">
+                {{ card.back }}
+              </span>
+            </template>
+          </FlashCard>
+        </div>
       </div>
     </template>
   </div>

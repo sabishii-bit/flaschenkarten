@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { eq, asc, desc } from 'drizzle-orm'
+import { and, eq, lt, asc, desc } from 'drizzle-orm'
 import { db } from '../db/index.js'
 import { decks, flashCards } from '../db/schema.js'
 import { getIp } from '../lib/getIp.js'
@@ -18,15 +18,32 @@ const CreateDeckBodySchema = z.object({
 
 export const deckRoutes = new Hono()
 
-// GET /api/decks — list all public decks, newest first
+const PAGE_SIZE = 12
+
+// GET /api/decks — paginated public decks, cursor = createdAt of last seen item
 deckRoutes.get('/', async (c) => {
+  const cursor = c.req.query('cursor')   // ISO datetime string, optional
+  const limit  = Math.min(Number(c.req.query('limit') ?? PAGE_SIZE), 50)
+
+  const conditions = cursor
+    ? and(eq(decks.isPublic, true), lt(decks.createdAt, new Date(cursor)))
+    : eq(decks.isPublic, true)
+
+  // Fetch one extra to know if a next page exists
   const rows = await db
     .select()
     .from(decks)
-    .where(eq(decks.isPublic, true))
+    .where(conditions)
     .orderBy(desc(decks.createdAt))
+    .limit(limit + 1)
 
-  return c.json<ApiResponse<Deck[]>>({ data: rows as Deck[] })
+  const hasMore   = rows.length > limit
+  const items     = hasMore ? rows.slice(0, limit) : rows
+  const nextCursor = hasMore ? items[items.length - 1].createdAt.toISOString() : null
+
+  return c.json<ApiResponse<{ decks: Deck[]; nextCursor: string | null }>>({
+    data: { decks: items as Deck[], nextCursor },
+  })
 })
 
 // POST /api/decks — create a deck with cards

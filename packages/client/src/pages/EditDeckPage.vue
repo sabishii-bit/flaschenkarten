@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi.ts'
 import Button from '../components/Button/Button.vue'
@@ -11,32 +11,32 @@ import type { Deck, DeckWithCards } from '@flaschenkarten/shared'
 
 interface CardEntry { front: string; back: string }
 
-const route        = useRoute()
-const router       = useRouter()
+const route         = useRoute()
+const router        = useRouter()
 const { get, post } = useApi()
-const id           = route.params.id as string
+const id            = route.params.id as string
 
-// Form state
 const title       = ref('')
 const description = ref('')
 const isPublic    = ref(true)
 const cards       = ref<CardEntry[]>([])
 const activeIndex = ref(0)
 
-// Page state
 const loading   = ref(true)
 const saving    = ref(false)
 const loadError = ref<string | null>(null)
 const saveError = ref<string | null>(null)
 
 const activeCard = computed(() => cards.value[activeIndex.value] ?? { front: '', back: '' })
-
-const canSave = computed(() =>
+const canSave    = computed(() =>
   title.value.trim().length > 0 &&
   cards.value.some(c => c.front.trim() || c.back.trim())
 )
 
+onUnmounted(() => { document.body.style.overflow = '' })
+
 onMounted(async () => {
+  document.body.style.overflow = 'hidden'
   try {
     const deck = await get<DeckWithCards>(`/api/decks/${id}`)
     title.value       = deck.title
@@ -87,32 +87,24 @@ async function saveDeck() {
 </script>
 
 <template>
-  <div class="animate-slide-up max-w-7xl mx-auto">
-    <p class="font-mono-cyber text-cyber-purple text-xs tracking-[0.3em] uppercase mb-2">
-      // edit deck
-    </p>
-    <h2 class="font-orbitron text-3xl font-bold text-cyber-white mb-10">
-      Edit Deck
-    </h2>
+  <div class="animate-slide-up">
+    <div v-if="loading" class="font-mono-cyber text-cyber-muted text-sm text-center py-24">// loading…</div>
+    <div v-else-if="loadError" class="font-mono-cyber text-red-400 text-sm text-center py-24">{{ loadError }}</div>
 
-    <div v-if="loading" class="font-mono-cyber text-cyber-muted text-sm text-center py-24">
-      // loading…
-    </div>
+    <div v-else class="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-8 items-start">
 
-    <div v-else-if="loadError" class="font-mono-cyber text-red-400 text-sm text-center py-24">
-      {{ loadError }}
-    </div>
+      <!-- LEFT: sticky panel — metadata + preview + actions -->
+      <div class="lg:sticky lg:top-8 flex flex-col gap-6">
+        <div>
+          <p class="font-mono-cyber text-cyber-purple text-xs tracking-[0.3em] uppercase mb-2">// edit deck</p>
+          <h2 class="font-orbitron text-2xl font-bold text-cyber-white">Edit Deck</h2>
+        </div>
 
-    <div v-else class="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start">
-
-      <!-- LEFT: Editor panel -->
-      <div class="flex flex-col gap-6">
-
+        <!-- Metadata -->
         <div class="flex flex-col gap-4">
           <TextInput v-model="title" label="Deck Title" placeholder="e.g. Japanese Vocabulary N5" />
           <TextArea  v-model="description" label="Description" placeholder="What will you study with this deck?" :rows="2" />
 
-          <!-- Public toggle -->
           <label class="flex items-center gap-3 cursor-pointer select-none w-fit">
             <span class="font-mono-cyber text-xs tracking-[0.2em] uppercase text-cyber-muted">Public</span>
             <div class="relative">
@@ -128,28 +120,29 @@ async function saveDeck() {
 
         <div class="border-t border-cyber-border" />
 
+        <!-- Live preview -->
         <div class="flex flex-col gap-3">
           <p class="font-mono-cyber text-cyber-muted text-xs tracking-[0.2em] uppercase">
-            Cards — {{ cards.length }}
+            // preview — card {{ activeIndex + 1 }}
           </p>
-
-          <CardEditor
-            v-for="(card, i) in cards"
-            :key="i"
-            :card="card"
-            :index="i"
-            :is-active="i === activeIndex"
-            @select="activeIndex = i"
-            @update:card="updateCard(i, $event)"
-            @delete="removeCard(i)"
-          />
-
-          <Button variant="ghost" @click="addCard">+ Add Card</Button>
+          <FlashCard :key="activeIndex">
+            <template #front>
+              <span class="font-mono-cyber text-center text-cyber-white text-base leading-relaxed" :class="{ 'text-cyber-muted/50 text-sm': !activeCard.front }">
+                {{ activeCard.front || '// front' }}
+              </span>
+            </template>
+            <template #back>
+              <span class="font-mono-cyber text-center text-cyber-white text-base leading-relaxed" :class="{ 'text-cyber-muted/50 text-sm': !activeCard.back }">
+                {{ activeCard.back || '// back' }}
+              </span>
+            </template>
+          </FlashCard>
         </div>
 
         <div class="border-t border-cyber-border" />
 
-        <div class="flex flex-col items-end gap-2">
+        <!-- Actions -->
+        <div class="flex flex-col gap-2">
           <p v-if="saveError" class="font-mono-cyber text-xs text-red-400">{{ saveError }}</p>
           <div class="flex gap-3">
             <RouterLink :to="`/decks/${id}`">
@@ -162,23 +155,26 @@ async function saveDeck() {
         </div>
       </div>
 
-      <!-- RIGHT: Live preview -->
-      <div class="sticky top-8 flex flex-col gap-4">
+      <!-- RIGHT: scrollable card list -->
+      <div class="flex flex-col gap-3">
         <p class="font-mono-cyber text-cyber-muted text-xs tracking-[0.2em] uppercase">
-          // preview — card {{ activeIndex + 1 }}
+          Cards — {{ cards.length }}
         </p>
-        <FlashCard>
-          <template #front>
-            <span class="font-mono-cyber text-center text-cyber-white text-lg leading-relaxed" :class="{ 'text-cyber-muted/50 text-sm': !activeCard.front }">
-              {{ activeCard.front || '// front' }}
-            </span>
-          </template>
-          <template #back>
-            <span class="font-mono-cyber text-center text-cyber-white text-lg leading-relaxed" :class="{ 'text-cyber-muted/50 text-sm': !activeCard.back }">
-              {{ activeCard.back || '// back' }}
-            </span>
-          </template>
-        </FlashCard>
+
+        <div class="flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-16rem)] pr-1">
+          <CardEditor
+            v-for="(card, i) in cards"
+            :key="i"
+            :card="card"
+            :index="i"
+            :is-active="i === activeIndex"
+            @select="activeIndex = i"
+            @update:card="updateCard(i, $event)"
+            @delete="removeCard(i)"
+          />
+        </div>
+
+        <Button variant="ghost" @click="addCard">+ Add Card</Button>
       </div>
 
     </div>

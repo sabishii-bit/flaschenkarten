@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { playFlipSound, type FlashCardProps } from './variants.ts'
+import { playFlipSound, sizeClass, type FlashCardProps } from './variants.ts'
 
-const props = defineProps<FlashCardProps>()
+const props = withDefaults(defineProps<FlashCardProps>(), { size: 'default' })
 
 const isFlipped = ref(false)
 
@@ -16,12 +16,15 @@ function flip() {
 <template>
   <div
     class="w-full cursor-pointer select-none perspective-[1200px]"
-    :class="{ 'cursor-not-allowed opacity-50': disabled }"
+    :class="[
+      props.size === 'sm' && !disabled ? 'transition-transform duration-200 hover:-translate-y-2 hover:scale-[1.02]' : '',
+      { 'cursor-not-allowed opacity-50': disabled },
+    ]"
     @click="flip"
   >
     <div
-      class="relative w-full min-h-80 preserve-3d transition-transform duration-500 ease-in-out"
-      :class="{ 'rotate-y-180': isFlipped }"
+      class="relative w-full preserve-3d transition-transform duration-500 ease-in-out"
+      :class="[sizeClass[props.size], { 'rotate-y-180': isFlipped }]"
     >
       <!-- Front face -->
       <div class="absolute inset-0 backface-hidden rounded-xl border border-cyber-purple/50 bg-cyber-surface p-8 flex flex-col items-center justify-center glow-purple group">
@@ -36,7 +39,7 @@ function flip() {
         </slot>
 
         <p class="absolute bottom-4 font-mono-cyber text-cyber-muted/50 text-xs tracking-widest">
-          CLICK TO FLIP
+          FRONT
         </p>
       </div>
 
@@ -53,7 +56,7 @@ function flip() {
         </slot>
 
         <p class="absolute bottom-4 font-mono-cyber text-cyber-muted/50 text-xs tracking-widest">
-          CLICK TO FLIP
+          BACK
         </p>
       </div>
     </div>

@@ -1,6 +1,13 @@
 export interface FlashCardProps {
   /** Disable the flip interaction */
   disabled?: boolean
+  /** Card height variant */
+  size?: 'default' | 'sm'
+}
+
+export const sizeClass: Record<NonNullable<FlashCardProps['size']>, string> = {
+  default: 'min-h-80',
+  sm:      'min-h-44',
 }
 
 export function playFlipSound(): void {
