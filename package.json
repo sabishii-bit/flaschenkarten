@@ -2,8 +2,10 @@
   "name": "flaschenkarten",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"pnpm --filter server dev\" \"pnpm --filter client dev\"",
-    "build": "pnpm --filter shared build && pnpm --filter client build && pnpm --filter server build"
+    "dev": "concurrently \"pnpm --filter @flaschenkarten/server dev\" \"pnpm --filter @flaschenkarten/client dev\"",
+    "dev:client": "pnpm --filter @flaschenkarten/client dev",
+    "dev:server": "pnpm --filter @flaschenkarten/server dev",
+    "build": "pnpm --filter @flaschenkarten/shared build && pnpm --filter @flaschenkarten/client build && pnpm --filter @flaschenkarten/server build"
   },
   "devDependencies": {
     "concurrently": "^9.0.0"
