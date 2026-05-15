@@ -1,0 +1,14 @@
+{
+  "name": "flaschenkarten",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter server dev\" \"pnpm --filter client dev\"",
+    "build": "pnpm --filter shared build && pnpm --filter client build && pnpm --filter server build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  }
+}
