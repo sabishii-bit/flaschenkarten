@@ -33,10 +33,17 @@ const canSave    = computed(() =>
   cards.value.some(c => c.front.trim() || c.back.trim())
 )
 
-onUnmounted(() => { document.body.style.overflow = '' })
+const lgQuery = window.matchMedia('(min-width: 1024px)')
+
+function syncScrollLock() {
+  document.body.style.overflow = lgQuery.matches ? 'hidden' : ''
+}
+
+onUnmounted(() => { document.body.style.overflow = ''; lgQuery.removeEventListener('change', syncScrollLock) })
 
 onMounted(async () => {
-  document.body.style.overflow = 'hidden'
+  syncScrollLock()
+  lgQuery.addEventListener('change', syncScrollLock)
   try {
     const deck = await get<DeckWithCards>(`/api/decks/${id}`)
     title.value       = deck.title
@@ -161,7 +168,7 @@ async function saveDeck() {
           Cards — {{ cards.length }}
         </p>
 
-        <div class="flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-16rem)] pr-1">
+        <div class="flex flex-col gap-3 lg:overflow-y-auto lg:max-h-[calc(100vh-16rem)] pr-1">
           <CardEditor
             v-for="(card, i) in cards"
             :key="i"

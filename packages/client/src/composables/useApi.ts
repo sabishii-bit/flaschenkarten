@@ -27,5 +27,9 @@ export function useApi() {
     return request<T>(path, { method, body: JSON.stringify(data) })
   }
 
-  return { get, post }
+  function del<T>(path: string) {
+    return request<T>(path, { method: 'DELETE' })
+  }
+
+  return { get, post, del }
 }

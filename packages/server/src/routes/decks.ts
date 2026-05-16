@@ -146,6 +146,30 @@ deckRoutes.put('/:id', async (c) => {
   return c.json<ApiResponse<Deck>>({ data: deck as Deck })
 })
 
+// DELETE /api/decks/:id — delete a deck (owner only)
+deckRoutes.delete('/:id', async (c) => {
+  const id       = c.req.param('id')
+  const authorId = getIp(c)
+
+  const [existing] = await db.select().from(decks).where(eq(decks.id, id))
+  if (!existing) {
+    return c.json<ApiResponse<never>>(
+      { data: undefined as never, error: 'Deck not found' },
+      404,
+    )
+  }
+  if (existing.authorId !== authorId) {
+    return c.json<ApiResponse<never>>(
+      { data: undefined as never, error: 'Forbidden' },
+      403,
+    )
+  }
+
+  await db.delete(decks).where(eq(decks.id, id))
+
+  return c.json<ApiResponse<{ id: string }>>({ data: { id } })
+})
+
 // GET /api/decks/:id — get a single deck with its cards
 deckRoutes.get('/:id', async (c) => {
   const id = c.req.param('id')

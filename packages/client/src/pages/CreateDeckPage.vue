@@ -14,8 +14,14 @@ interface CardEntry { front: string; back: string }
 const router   = useRouter()
 const { post } = useApi()
 
-onMounted(()   => { document.body.style.overflow = 'hidden' })
-onUnmounted(() => { document.body.style.overflow = '' })
+const lgQuery = window.matchMedia('(min-width: 1024px)')
+
+function syncScrollLock() {
+  document.body.style.overflow = lgQuery.matches ? 'hidden' : ''
+}
+
+onMounted(()   => { syncScrollLock(); lgQuery.addEventListener('change', syncScrollLock) })
+onUnmounted(() => { document.body.style.overflow = ''; lgQuery.removeEventListener('change', syncScrollLock) })
 
 const title       = ref('')
 const description = ref('')
@@ -133,7 +139,7 @@ async function saveDeck() {
           Cards — {{ cards.length }}
         </p>
 
-        <div class="flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-16rem)] pr-1">
+        <div class="flex flex-col gap-3 lg:overflow-y-auto lg:max-h-[calc(100vh-16rem)] pr-1">
           <CardEditor
             v-for="(card, i) in cards"
             :key="i"

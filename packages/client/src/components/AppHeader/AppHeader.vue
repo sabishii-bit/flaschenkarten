@@ -13,7 +13,7 @@ const { toggle } = useSideNav()
 
       <!-- Far-left: hamburger -->
       <button
-        class="flex flex-col justify-center gap-1.5 w-8 h-8 shrink-0 group z-10"
+        class="flex flex-col justify-center gap-1.5 w-8 h-8 shrink-0 group z-10 cursor-pointer"
         aria-label="Open menu"
         @click="toggle"
       >

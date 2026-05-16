@@ -1,28 +1,52 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi.ts'
 import Button from '../components/Button/Button.vue'
 import FlashCard from '../components/FlashCard/FlashCard.vue'
+import { Trash2 } from '@lucide/vue'
 import type { DeckWithCards } from '@flaschenkarten/shared'
 
-const route  = useRoute()
-const id     = route.params.id as string
-const { get } = useApi()
+const route        = useRoute()
+const router       = useRouter()
+const id           = route.params.id as string
+const { get, del } = useApi()
 
-const deck    = ref<DeckWithCards | null>(null)
-const loading = ref(true)
-const error   = ref<string | null>(null)
+const deck      = ref<DeckWithCards | null>(null)
+const loading   = ref(true)
+const error     = ref<string | null>(null)
+const isOwn     = ref(false)
+const confirming = ref(false)
+const deleting   = ref(false)
+const deleteError = ref<string | null>(null)
 
 onMounted(async () => {
   try {
     deck.value = await get<DeckWithCards>(`/api/decks/${id}`)
+    // Check ownership: if GET /api/decks/mine contains this deck, it's ours
+    const mine = await get<{ id: string }[]>('/api/decks/mine')
+    isOwn.value = mine.some(d => d.id === id)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to load deck'
   } finally {
     loading.value = false
   }
 })
+
+async function deleteDeck() {
+  if (deleting.value) return
+  deleting.value = true
+  deleteError.value = null
+  try {
+    await del(`/api/decks/${id}`)
+    router.push('/my-decks')
+  } catch (e) {
+    deleteError.value = e instanceof Error ? e.message : 'Failed to delete deck'
+    confirming.value = false
+  } finally {
+    deleting.value = false
+  }
+}
 </script>
 
 <template>
@@ -42,13 +66,40 @@ onMounted(async () => {
         {{ deck.description }}
       </p>
 
-      <div class="flex gap-3 mt-8">
-        <RouterLink :to="`/decks/${id}/study`">
-          <Button variant="primary">Study Now</Button>
-        </RouterLink>
-        <RouterLink :to="`/decks/${id}/edit`">
-          <Button variant="ghost">Edit Deck</Button>
-        </RouterLink>
+      <div class="flex flex-wrap items-center justify-between gap-3 mt-8">
+        <!-- Left: primary actions -->
+        <div class="flex items-center gap-3">
+          <RouterLink :to="`/decks/${id}/study`">
+            <Button variant="primary">Study Now</Button>
+          </RouterLink>
+          <template v-if="isOwn">
+            <RouterLink :to="`/decks/${id}/edit`">
+              <Button variant="ghost">Edit Deck</Button>
+            </RouterLink>
+          </template>
+        </div>
+
+        <!-- Right: delete -->
+        <template v-if="isOwn">
+          <template v-if="!confirming">
+            <Button variant="danger" @click="confirming = true">
+              <span class="flex items-center gap-2">
+                <Trash2 :size="14" />
+                Delete
+              </span>
+            </Button>
+          </template>
+          <template v-else>
+            <div class="flex items-center gap-2">
+              <span class="font-mono-cyber text-cyber-muted text-xs">Are you sure?</span>
+              <Button variant="danger" :disabled="deleting" @click="deleteDeck">
+                {{ deleting ? 'Deleting…' : 'Yes, delete' }}
+              </Button>
+              <Button variant="ghost" @click="confirming = false">Cancel</Button>
+            </div>
+          </template>
+          <p v-if="deleteError" class="font-mono-cyber text-xs text-red-400 w-full text-right">{{ deleteError }}</p>
+        </template>
       </div>
 
       <!-- Card grid -->
