@@ -4,6 +4,7 @@ export function useApi() {
   async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const res = await fetch(`${BASE}${path}`, {
       ...init,
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         'X-Api-Key': import.meta.env.VITE_API_KEY ?? '',

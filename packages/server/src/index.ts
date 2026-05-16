@@ -8,16 +8,19 @@ import { favoriteRoutes } from './routes/favorites.js'
 import { generateRoutes } from './routes/generate.js'
 import { ipBan } from './middleware/ipBan.js'
 import { apiKey } from './middleware/apiKey.js'
+import { visitorId } from './middleware/visitorId.js'
 
 const app = new Hono()
 const PORT = Number(process.env.PORT ?? 3000)
 
 app.use(cors({
-  origin: process.env.CORS_ORIGIN ?? '*',
+  origin:       process.env.CORS_ORIGIN ?? '*',
   allowHeaders: ['Content-Type', 'X-Api-Key'],
+  credentials:  true,
 }))
 app.use(apiKey)
 app.use(ipBan)
+app.use(visitorId)
 
 app.get('/api/health', (c) => {
   const response: ApiResponse<{ status: string }> = {

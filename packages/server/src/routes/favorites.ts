@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { and, eq } from 'drizzle-orm'
 import { db } from '../db/index.js'
 import { deckFavorites, decks } from '../db/schema.js'
-import { getIp } from '../lib/getIp.js'
+import { getVisitorId } from '../lib/getVisitorId.js'
 import type { ApiResponse, Deck } from '@flaschenkarten/shared'
 
 export const favoriteRoutes = new Hono()
@@ -10,7 +10,7 @@ export const favoriteRoutes = new Hono()
 // GET /api/decks/:id/favorite — is this deck favorited by the caller?
 favoriteRoutes.get('/:id/favorite', async (c) => {
   const deckId = c.req.param('id')
-  const userIp = getIp(c)
+  const userIp = getVisitorId(c)
 
   const [row] = await db
     .select()
@@ -23,7 +23,7 @@ favoriteRoutes.get('/:id/favorite', async (c) => {
 // POST /api/decks/:id/favorite — toggle favorite
 favoriteRoutes.post('/:id/favorite', async (c) => {
   const deckId = c.req.param('id')
-  const userIp = getIp(c)
+  const userIp = getVisitorId(c)
 
   const [existing] = await db
     .select()
@@ -41,7 +41,7 @@ favoriteRoutes.post('/:id/favorite', async (c) => {
 
 // GET /api/favorites — list all favorited decks for the caller
 favoriteRoutes.get('/', async (c) => {
-  const userIp = getIp(c)
+  const userIp = getVisitorId(c)
 
   const rows = await db
     .select({ deck: decks })

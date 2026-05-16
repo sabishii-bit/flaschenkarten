@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { eq, asc, sql } from 'drizzle-orm'
 import { db } from '../db/index.js'
 import { decks, flashCards } from '../db/schema.js'
-import { getIp } from '../lib/getIp.js'
+import { getVisitorId } from '../lib/getVisitorId.js'
 import type { ApiResponse, Deck, DeckWithCards } from '@flaschenkarten/shared'
 
 const CreateDeckBodySchema = z.object({
@@ -101,7 +101,7 @@ deckRoutes.get('/', async (c) => {
 
 // POST /api/decks — create a deck with cards
 deckRoutes.post('/', async (c) => {
-  const authorId = getIp(c)
+  const authorId = getVisitorId(c)
 
   const parsed = CreateDeckBodySchema.safeParse(await c.req.json())
   if (!parsed.success) {
@@ -137,7 +137,7 @@ deckRoutes.post('/', async (c) => {
 
 // GET /api/decks/mine — list decks belonging to the requesting user
 deckRoutes.get('/mine', async (c) => {
-  const authorId = getIp(c)
+  const authorId = getVisitorId(c)
 
   const rows = await db
     .select()
@@ -150,7 +150,7 @@ deckRoutes.get('/mine', async (c) => {
 // PUT /api/decks/:id — replace deck metadata and all cards (owner only)
 deckRoutes.put('/:id', async (c) => {
   const id       = c.req.param('id')
-  const authorId = getIp(c)
+  const authorId = getVisitorId(c)
 
   const [existing] = await db.select().from(decks).where(eq(decks.id, id))
   if (!existing) {
@@ -204,7 +204,7 @@ deckRoutes.put('/:id', async (c) => {
 // DELETE /api/decks/:id — delete a deck (owner only)
 deckRoutes.delete('/:id', async (c) => {
   const id       = c.req.param('id')
-  const authorId = getIp(c)
+  const authorId = getVisitorId(c)
 
   const [existing] = await db.select().from(decks).where(eq(decks.id, id))
   if (!existing) {

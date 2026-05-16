@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { and, eq, sql } from 'drizzle-orm'
 import { db } from '../db/index.js'
 import { deckVotes, decks } from '../db/schema.js'
-import { getIp } from '../lib/getIp.js'
+import { getVisitorId } from '../lib/getVisitorId.js'
 import type { ApiResponse } from '@flaschenkarten/shared'
 
 export interface VoteSummary {
@@ -16,7 +16,7 @@ export const voteRoutes = new Hono()
 // GET /api/decks/:id/votes
 voteRoutes.get('/:id/votes', async (c) => {
   const deckId  = c.req.param('id')
-  const voterIp = getIp(c)
+  const voterIp = getVisitorId(c)
 
   const [deck] = await db.select({ id: decks.id }).from(decks).where(eq(decks.id, deckId))
   if (!deck) {
@@ -47,7 +47,7 @@ voteRoutes.get('/:id/votes', async (c) => {
 // Sending the same vote again toggles it off (removes it)
 voteRoutes.post('/:id/votes', async (c) => {
   const deckId  = c.req.param('id')
-  const voterIp = getIp(c)
+  const voterIp = getVisitorId(c)
   const { vote } = await c.req.json<{ vote: 'like' | 'dislike' }>()
 
   if (vote !== 'like' && vote !== 'dislike') {
