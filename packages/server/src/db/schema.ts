@@ -1,4 +1,5 @@
 import { pgTable, text, boolean, integer, timestamp, unique } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 
 export const bannedIps = pgTable('banned_ips', {
   ip:        text('ip').primaryKey(),
@@ -16,7 +17,8 @@ export const decks = pgTable('decks', {
   authorId:    text('author_id'),
   title:       text('title').notNull(),
   description: text('description').notNull().default(''),
-  isPublic:    boolean('is_public').notNull().default(true),
+  isPublic:      boolean('is_public').notNull().default(true),
+  requiresAnswer: boolean('requires_answer').notNull().default(false),
   ...timestamps,
 })
 
@@ -38,8 +40,9 @@ export const deckFavorites = pgTable('deck_favorites', {
 export const flashCards = pgTable('flash_cards', {
   id:       text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
   deckId:   text('deck_id').notNull().references(() => decks.id, { onDelete: 'cascade' }),
-  front:    text('front').notNull(),
-  back:     text('back').notNull(),
-  position: integer('position').notNull().default(0),
+  front:           text('front').notNull(),
+  back:            text('back').notNull(),
+  position:        integer('position').notNull().default(0),
+  acceptedAnswers: text('accepted_answers').array().notNull().default(sql`'{}'`),
   ...timestamps,
 })

@@ -9,7 +9,7 @@ import FlashCard from '../components/FlashCard/FlashCard.vue'
 import { useApi } from '../composables/useApi.ts'
 import type { Deck } from '@flaschenkarten/shared'
 
-interface CardEntry { front: string; back: string }
+interface CardEntry { front: string; back: string; acceptedAnswers: string[] }
 
 const router   = useRouter()
 const { post } = useApi()
@@ -23,10 +23,11 @@ function syncScrollLock() {
 onMounted(()   => { syncScrollLock(); lgQuery.addEventListener('change', syncScrollLock) })
 onUnmounted(() => { document.body.style.overflow = ''; lgQuery.removeEventListener('change', syncScrollLock) })
 
-const title       = ref('')
-const description = ref('')
-const isPublic    = ref(true)
-const cards       = ref<CardEntry[]>([{ front: '', back: '' }])
+const title          = ref('')
+const description    = ref('')
+const isPublic       = ref(true)
+const requiresAnswer = ref(false)
+const cards          = ref<CardEntry[]>([{ front: '', back: '', acceptedAnswers: [] }])
 const activeIndex = ref(0)
 const saving      = ref(false)
 const saveError   = ref<string | null>(null)
@@ -38,7 +39,7 @@ const canSave    = computed(() =>
 )
 
 function addCard() {
-  cards.value.push({ front: '', back: '' })
+  cards.value.push({ front: '', back: '', acceptedAnswers: [] })
   activeIndex.value = cards.value.length - 1
 }
 
@@ -58,10 +59,11 @@ async function saveDeck() {
   saveError.value = null
   try {
     const deck = await post<Deck>('/api/decks', {
-      title:       title.value,
-      description: description.value,
-      isPublic:    isPublic.value,
-      cards:       cards.value.filter(c => c.front.trim() || c.back.trim()),
+      title:          title.value,
+      description:    description.value,
+      isPublic:       isPublic.value,
+      requiresAnswer: requiresAnswer.value,
+      cards:          cards.value.filter(c => c.front.trim() || c.back.trim()),
     })
     router.push(`/decks/${deck.id}`)
   } catch (e) {
@@ -97,6 +99,18 @@ async function saveDeck() {
             </div>
             <span class="font-mono-cyber text-xs text-cyber-white/60">
               {{ isPublic ? 'Anyone can view this deck' : 'Only you can view this deck' }}
+            </span>
+          </label>
+
+          <label class="flex items-center gap-3 cursor-pointer select-none w-fit">
+            <span class="font-mono-cyber text-xs tracking-[0.2em] uppercase text-cyber-muted">Answer Mode</span>
+            <div class="relative">
+              <input v-model="requiresAnswer" type="checkbox" class="sr-only" />
+              <div class="w-10 h-5 rounded-full transition-colors duration-200" :class="requiresAnswer ? 'bg-cyber-purple glow-purple' : 'bg-cyber-border'" />
+              <div class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200" :class="requiresAnswer ? 'translate-x-5' : 'translate-x-0'" />
+            </div>
+            <span class="font-mono-cyber text-xs text-cyber-white/60">
+              {{ requiresAnswer ? 'Studiers must type an answer' : 'Flip-only mode' }}
             </span>
           </label>
         </div>
@@ -146,6 +160,7 @@ async function saveDeck() {
             :card="card"
             :index="i"
             :is-active="i === activeIndex"
+            :requires-answer="requiresAnswer"
             @select="activeIndex = i"
             @update:card="updateCard(i, $event)"
             @delete="removeCard(i)"

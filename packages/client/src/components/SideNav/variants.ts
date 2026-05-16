@@ -1,12 +1,31 @@
 export interface NavItem {
   label: string
-  eyebrow: string
   to: string
 }
 
-export const navItems: NavItem[] = [
-  { eyebrow: '// personal',  label: 'My Decks',     to: '/my-decks'  },
-  { eyebrow: '// personal',  label: 'Favorites',    to: '/favorites' },
-  { eyebrow: '// explore',   label: 'Browse Decks', to: '/decks'     },
-  { eyebrow: '// build',     label: 'Create Deck',  to: '/decks/new' },
+export interface NavSection {
+  eyebrow: string
+  items: NavItem[]
+}
+
+export const navSections: NavSection[] = [
+  {
+    eyebrow: '// personal',
+    items: [
+      { label: 'My Decks',  to: '/my-decks'  },
+      { label: 'Favorites', to: '/favorites' },
+    ],
+  },
+  {
+    eyebrow: '// explore',
+    items: [
+      { label: 'Browse Decks', to: '/decks' },
+    ],
+  },
+  {
+    eyebrow: '// build',
+    items: [
+      { label: 'Create Deck', to: '/decks/new' },
+    ],
+  },
 ]

@@ -1,12 +1,14 @@
 export interface CardEditorCard {
   front: string
   back: string
+  acceptedAnswers: string[]
 }
 
 export interface CardEditorProps {
   card: CardEditorCard
   index: number
   isActive: boolean
+  requiresAnswer: boolean
 }
 
 export const cardEditorBase =

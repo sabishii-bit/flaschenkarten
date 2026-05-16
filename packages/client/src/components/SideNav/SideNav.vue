@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useSideNav } from '../../composables/useSideNav.ts'
-import { navItems } from './variants.ts'
+import { navSections } from './variants.ts'
 
 const { isOpen, close } = useSideNav()
 </script>
@@ -38,22 +38,24 @@ const { isOpen, close } = useSideNav()
       </div>
 
       <!-- Nav items -->
-      <nav class="flex flex-col gap-1 p-4 flex-1">
-        <RouterLink
-          v-for="item in navItems"
-          :key="item.to"
-          :to="item.to"
-          class="group flex flex-col gap-0.5 px-4 py-3 rounded-lg border border-transparent transition-all duration-200 hover:border-cyber-border hover:bg-cyber-raised hover:glow-purple"
-          active-class="border-cyber-purple/40 bg-cyber-raised text-cyber-purple-lt"
-          @click="close"
-        >
-          <span class="font-mono-cyber text-cyber-purple text-[10px] tracking-[0.25em] uppercase">
-            {{ item.eyebrow }}
+      <nav class="flex flex-col gap-4 p-4 flex-1">
+        <div v-for="section in navSections" :key="section.eyebrow" class="flex flex-col gap-0">
+          <span class="font-mono-cyber text-cyber-purple text-[10px] tracking-[0.25em] uppercase px-4 pb-1">
+            {{ section.eyebrow }}
           </span>
-          <span class="font-orbitron text-cyber-white text-sm font-semibold tracking-wide group-[.router-link-active]:text-cyber-purple-lt">
-            {{ item.label }}
-          </span>
-        </RouterLink>
+          <RouterLink
+            v-for="item in section.items"
+            :key="item.to"
+            :to="item.to"
+            class="group flex items-center px-4 py-1.5 rounded-lg border border-transparent transition-all duration-200 hover:border-cyber-border hover:bg-cyber-raised hover:glow-purple"
+            active-class="border-cyber-purple/40 bg-cyber-raised text-cyber-purple-lt"
+            @click="close"
+          >
+            <span class="font-orbitron text-cyber-white text-sm font-semibold tracking-wide group-[.router-link-active]:text-cyber-purple-lt">
+              {{ item.label }}
+            </span>
+          </RouterLink>
+        </div>
       </nav>
 
       <!-- Bottom brand -->

@@ -7,12 +7,14 @@ import { getIp } from '../lib/getIp.js'
 import type { ApiResponse, Deck, DeckWithCards } from '@flaschenkarten/shared'
 
 const CreateDeckBodySchema = z.object({
-  title:       z.string().min(1).max(120),
-  description: z.string().max(500).default(''),
-  isPublic:    z.boolean().default(true),
-  cards:       z.array(z.object({
-    front: z.string().min(1),
-    back:  z.string().min(1),
+  title:          z.string().min(1).max(120),
+  description:    z.string().max(500).default(''),
+  isPublic:       z.boolean().default(true),
+  requiresAnswer: z.boolean().default(false),
+  cards:          z.array(z.object({
+    front:           z.string().min(1),
+    back:            z.string().min(1),
+    acceptedAnswers: z.array(z.string()).default([]),
   })).min(1),
 })
 
@@ -58,19 +60,20 @@ deckRoutes.post('/', async (c) => {
     )
   }
 
-  const { title, description, isPublic, cards: cardEntries } = parsed.data
+  const { title, description, isPublic, requiresAnswer, cards: cardEntries } = parsed.data
 
   const deck = await db.transaction(async (tx) => {
     const [created] = await tx
       .insert(decks)
-      .values({ title, description, isPublic, authorId })
+      .values({ title, description, isPublic, requiresAnswer, authorId })
       .returning()
 
     await tx.insert(flashCards).values(
       cardEntries.map((card, position) => ({
-        deckId: created.id,
-        front:  card.front,
-        back:   card.back,
+        deckId:          created.id,
+        front:           card.front,
+        back:            card.back,
+        acceptedAnswers: card.acceptedAnswers,
         position,
       })),
     )
@@ -120,12 +123,12 @@ deckRoutes.put('/:id', async (c) => {
     )
   }
 
-  const { title, description, isPublic, cards: cardEntries } = parsed.data
+  const { title, description, isPublic, requiresAnswer, cards: cardEntries } = parsed.data
 
   const deck = await db.transaction(async (tx) => {
     const [updated] = await tx
       .update(decks)
-      .set({ title, description, isPublic })
+      .set({ title, description, isPublic, requiresAnswer })
       .where(eq(decks.id, id))
       .returning()
 
@@ -133,9 +136,10 @@ deckRoutes.put('/:id', async (c) => {
 
     await tx.insert(flashCards).values(
       cardEntries.map((card, position) => ({
-        deckId: id,
-        front:  card.front,
-        back:   card.back,
+        deckId:          id,
+        front:           card.front,
+        back:            card.back,
+        acceptedAnswers: card.acceptedAnswers,
         position,
       })),
     )

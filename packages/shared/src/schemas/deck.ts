@@ -6,8 +6,9 @@ export const DeckSchema = z.object({
   authorId:    z.string().nullable().default(null),
   title:       z.string().min(1).max(120),
   description: z.string().max(500).default(''),
-  isPublic:    z.boolean().default(true),
-  createdAt:   z.iso.datetime(),
+  isPublic:      z.boolean().default(true),
+  requiresAnswer: z.boolean().default(false),
+  createdAt:     z.iso.datetime(),
   updatedAt:   z.iso.datetime(),
 })
 
