@@ -12,7 +12,7 @@ export interface CardEditorProps {
 }
 
 export const cardEditorBase =
-  'relative flex gap-3 p-4 rounded-xl border bg-cyber-surface ' +
+  'relative flex flex-wrap gap-3 p-4 rounded-xl border bg-cyber-surface ' +
   'cursor-pointer transition-all duration-200 border-cyber-border hover:border-cyber-purple/40'
 
 export const cardEditorActive =

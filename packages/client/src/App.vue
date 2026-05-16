@@ -5,7 +5,7 @@ import SideNav from './components/SideNav/SideNav.vue'
 </script>
 
 <template>
-  <div class="min-h-screen w-full overflow-x-hidden bg-cyber-bg scanlines">
+  <div class="min-h-screen w-full bg-cyber-bg scanlines">
     <AppHeader />
     <SideNav />
     <main class="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-10">

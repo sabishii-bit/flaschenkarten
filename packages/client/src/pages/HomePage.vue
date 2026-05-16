@@ -6,10 +6,10 @@ import FeatureGrid from '../components/FeatureGrid/FeatureGrid.vue'
 <template>
   <div>
     <HeroSection
-      eyebrow="// your second brain"
+      eyebrow="// ai-powered flashcards"
       title-top="FLASCHEN"
       title-bottom="KARTEN"
-      subtitle="Build decks. Study smarter. Share knowledge."
+      subtitle="Generate decks with AI, study with answer checking, and discover what the community is learning."
       :buttons="[
         { label: 'Browse Decks',  variant: 'primary', to: '/decks'     },
         { label: 'Create a Deck', variant: 'ghost',   to: '/decks/new' },

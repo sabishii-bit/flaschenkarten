@@ -5,7 +5,7 @@ const { toggle } = useSideNav()
 </script>
 
 <template>
-  <header class="relative border-b border-cyber-border bg-cyber-surface/80 backdrop-blur-sm">
+  <header class="sticky top-0 z-40 border-b border-cyber-border bg-cyber-surface/80 backdrop-blur-sm">
     <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyber-purple to-transparent" />
 
     <!-- Three-slot layout: hamburger | centered logo | spacer -->

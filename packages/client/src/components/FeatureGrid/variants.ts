@@ -6,18 +6,18 @@ export interface Feature {
 
 export const features: Feature[] = [
   {
-    icon: '⬡',
-    title: 'Build Decks',
-    description: 'Create flashcard decks on any subject. Rich text, images, and custom fields supported.',
-  },
-  {
     icon: '◈',
-    title: 'Spaced Repetition',
-    description: 'Study with an algorithm that surfaces cards right before you forget them.',
+    title: 'AI Generation',
+    description: 'Describe any topic and Claude generates a complete deck — title, cards, hashtags, and answer mode — in seconds.',
   },
   {
     icon: '▸',
-    title: 'Share & Discover',
-    description: 'Publish your decks for others to study. Import decks built by the community.',
+    title: 'Study Mode',
+    description: 'Flip through cards or enable answer mode to type responses. Tracks your score and time, with accent-tolerant answer matching.',
+  },
+  {
+    icon: '⬡',
+    title: 'Browse & Discover',
+    description: 'Explore community decks ranked by likes and favorites. Search by title or hashtag, and save the ones you love.',
   },
 ]

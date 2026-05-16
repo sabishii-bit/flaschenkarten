@@ -60,7 +60,7 @@ function onAnswerKeydown(e: KeyboardEvent) {
     </div>
 
     <!-- Back + accepted answers -->
-    <div class="flex-1 min-w-0 flex flex-col gap-2" @click.stop>
+    <div class="w-full sm:flex-1 sm:min-w-0 flex flex-col gap-2" @click.stop>
       <TextArea
         :model-value="card.back"
         label="Back"

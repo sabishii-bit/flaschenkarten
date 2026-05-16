@@ -19,7 +19,12 @@
 
 /* Base */
 html { background-color: var(--color-cyber-bg); color: var(--color-cyber-white); }
-body { margin: 0; }
+body { margin: 0; overflow-x: hidden; }
+
+/* Prevent iOS Safari from auto-zooming on input focus (triggered when font-size < 16px) */
+@supports (-webkit-touch-callout: none) {
+  input, textarea, select { font-size: 16px; }
+}
 
 /* Glow utilities */
 @utility glow-purple {
