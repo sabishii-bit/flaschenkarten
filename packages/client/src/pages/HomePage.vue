@@ -6,7 +6,7 @@ import FeatureGrid from '../components/FeatureGrid/FeatureGrid.vue'
 <template>
   <div>
     <HeroSection
-      eyebrow="// ai-powered flashcards"
+      eyebrow="// community-driven flashcards"
       title-top="FLASCHEN"
       title-bottom="KARTEN"
       subtitle="Generate decks with AI, study with answer checking, and discover what the community is learning."

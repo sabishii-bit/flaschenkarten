@@ -1,0 +1,6 @@
+name = "flaschenkarten"
+compatibility_date = "2025-05-16"
+
+[assets]
+directory = "packages/client/dist"
+not_found_handling = "single-page-application"
