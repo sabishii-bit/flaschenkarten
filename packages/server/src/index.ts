@@ -6,11 +6,16 @@ import { deckRoutes } from './routes/decks.js'
 import { voteRoutes } from './routes/votes.js'
 import { favoriteRoutes } from './routes/favorites.js'
 import { ipBan } from './middleware/ipBan.js'
+import { apiKey } from './middleware/apiKey.js'
 
 const app = new Hono()
 const PORT = Number(process.env.PORT ?? 3000)
 
-app.use(cors({ origin: process.env.CORS_ORIGIN ?? '*' }))
+app.use(cors({
+  origin: process.env.CORS_ORIGIN ?? '*',
+  allowHeaders: ['Content-Type', 'X-Api-Key'],
+}))
+app.use(apiKey)
 app.use(ipBan)
 
 app.get('/api/health', (c) => {

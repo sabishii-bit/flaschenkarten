@@ -3,14 +3,17 @@ node_modules/
 dist/
 *.log
 
-# Env files — .development is committed, all others are not
+# Env files
 .env
 .env.local
 .env.*.local
 .env.production
+.env.development
 packages/server/.env.production
+packages/server/.env.development
 packages/server/.env.*.local
 packages/client/.env.production
+packages/client/.env.development
 packages/client/.env.*.local
 
 # OS

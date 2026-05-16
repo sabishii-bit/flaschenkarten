@@ -4,6 +4,7 @@ export function useApi() {
       ...init,
       headers: {
         'Content-Type': 'application/json',
+        'X-Api-Key': import.meta.env.VITE_API_KEY ?? '',
         ...init.headers,
       },
     })
