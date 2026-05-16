@@ -19,7 +19,7 @@ COPY packages/shared ./packages/shared
 COPY packages/server ./packages/server
 RUN pnpm --filter @flaschenkarten/shared build
 RUN pnpm --filter @flaschenkarten/server build
-RUN pnpm deploy --filter @flaschenkarten/server --prod /deploy
+RUN pnpm deploy --filter @flaschenkarten/server --prod /deploy --legacy
 
 # Final slim image
 FROM node:22-alpine AS runner
