@@ -50,5 +50,5 @@ favoriteRoutes.get('/', async (c) => {
     .where(eq(deckFavorites.userIp, userIp))
     .orderBy(deckFavorites.createdAt)
 
-  return c.json<ApiResponse<Deck[]>>({ data: rows.map(r => r.deck) as Deck[] })
+  return c.json<ApiResponse<Deck[]>>({ data: rows.map(r => r.deck) as unknown as Deck[] })
 })

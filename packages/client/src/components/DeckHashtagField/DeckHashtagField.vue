@@ -31,7 +31,7 @@ function onKeydown(e: KeyboardEvent) {
   <div class="flex flex-col gap-1.5">
     <div class="flex items-center justify-between">
       <span class="font-mono-cyber text-cyber-muted text-[10px] tracking-[0.2em] uppercase">Hashtags</span>
-      <span class="font-mono-cyber text-[10px]" :class="modelValue.length < MIN ? 'text-red-400' : 'text-cyber-muted/60'">
+      <span class="font-mono-cyber text-[10px] text-cyber-muted/60">
         {{ modelValue.length }} / {{ MAX }}
       </span>
     </div>
