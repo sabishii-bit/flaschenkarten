@@ -37,7 +37,8 @@ function onAnswerKeydown(e: KeyboardEvent) {
 <template>
   <div
     :class="[cardEditorBase, isActive && cardEditorActive]"
-    @click="emit('select')"
+    tabindex="0"
+    @focusin="emit('select')"
   >
     <!-- Card number badge -->
     <div class="shrink-0 pt-1">

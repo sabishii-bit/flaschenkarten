@@ -115,13 +115,11 @@ async function saveDeck() {
 
 <template>
   <div class="animate-slide-up">
-    <div class="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-8 items-start">
 
-      <!-- LEFT: sticky panel -->
-      <div class="lg:sticky lg:top-8 flex flex-col gap-6 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto lg:pr-1">
-
-        <!-- Phase 1: prompt form -->
-        <template v-if="!generated">
+    <!-- Phase 1: prompt form — simple single-column layout -->
+    <template v-if="!generated">
+      <div class="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-8 items-start">
+        <div class="lg:sticky lg:top-8 flex flex-col gap-6">
           <div>
             <p class="font-mono-cyber text-cyber-purple text-xs tracking-[0.3em] uppercase mb-2">// generate</p>
             <h2 class="font-orbitron text-2xl font-bold text-cyber-white">Generate a Deck</h2>
@@ -153,10 +151,20 @@ async function saveDeck() {
               {{ generating ? 'Generating…' : 'Generate' }}
             </Button>
           </div>
-        </template>
+        </div>
 
-        <!-- Phase 2: edit generated deck -->
-        <template v-else>
+        <div class="hidden lg:flex items-center justify-center h-64 border border-dashed border-cyber-border/40 rounded-sm">
+          <p class="font-mono-cyber text-cyber-muted/40 text-xs tracking-[0.3em] uppercase">// cards will appear here</p>
+        </div>
+      </div>
+    </template>
+
+    <!-- Phase 2: two-panel editor — shared flex row, both columns scroll independently -->
+    <template v-else>
+      <div class="flex gap-8 lg:h-[calc(100vh-11rem)]">
+
+        <!-- LEFT: scrollable controls -->
+        <div class="hidden lg:flex w-[380px] shrink-0 flex-col gap-6 overflow-y-auto pr-2">
           <div class="flex items-start justify-between gap-2">
             <div>
               <p class="font-mono-cyber text-cyber-purple text-xs tracking-[0.3em] uppercase mb-2">// new deck</p>
@@ -170,7 +178,6 @@ async function saveDeck() {
             </button>
           </div>
 
-          <!-- Metadata -->
           <div class="flex flex-col gap-4">
             <TextInput v-model="title" label="Deck Title" placeholder="e.g. Japanese Vocabulary N5" />
             <TextArea  v-model="description" label="Description" placeholder="What will you study with this deck?" :rows="2" />
@@ -202,7 +209,6 @@ async function saveDeck() {
 
           <div class="border-t border-cyber-border" />
 
-          <!-- Live preview -->
           <div class="flex flex-col gap-3">
             <p class="font-mono-cyber text-cyber-muted text-xs tracking-[0.2em] uppercase">
               // preview — card {{ activeIndex + 1 }}
@@ -220,35 +226,27 @@ async function saveDeck() {
               </template>
             </FlashCard>
           </div>
+        </div>
 
-          <div class="border-t border-cyber-border" />
-
-          <!-- Actions -->
-          <div class="flex flex-col gap-2">
-            <p v-if="saveError" class="font-mono-cyber text-xs text-red-400">{{ saveError }}</p>
-            <Button variant="primary" :disabled="!canSave || saving" @click="saveDeck">
-              {{ saving ? 'Saving…' : 'Save Deck' }}
-            </Button>
+        <!-- Mobile: show edit fields above cards -->
+        <div class="lg:hidden flex flex-col gap-6 w-full mb-4">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <p class="font-mono-cyber text-cyber-purple text-xs tracking-[0.3em] uppercase mb-2">// new deck</p>
+              <h2 class="font-orbitron text-2xl font-bold text-cyber-white">{{ title || 'Generated Deck' }}</h2>
+            </div>
+            <button class="font-mono-cyber text-xs text-cyber-muted hover:text-cyber-white transition-colors shrink-0 mt-1" @click="regenerate">← Regenerate</button>
           </div>
-        </template>
-      </div>
+          <TextInput v-model="title" label="Deck Title" placeholder="e.g. Japanese Vocabulary N5" />
+          <TextArea  v-model="description" label="Description" placeholder="What will you study with this deck?" :rows="2" />
+        </div>
 
-      <!-- RIGHT -->
-      <div class="flex flex-col gap-3">
-        <!-- Phase 1: placeholder -->
-        <template v-if="!generated">
-          <div class="hidden lg:flex items-center justify-center h-64 border border-dashed border-cyber-border/40 rounded-sm">
-            <p class="font-mono-cyber text-cyber-muted/40 text-xs tracking-[0.3em] uppercase">// cards will appear here</p>
-          </div>
-        </template>
-
-        <!-- Phase 2: card editor -->
-        <template v-else>
-          <p class="font-mono-cyber text-cyber-muted text-xs tracking-[0.2em] uppercase">
+        <!-- RIGHT: scrollable card list -->
+        <div class="flex-1 flex flex-col gap-3 overflow-y-auto pr-1">
+          <p class="font-mono-cyber text-cyber-muted text-xs tracking-[0.2em] uppercase shrink-0">
             Cards — {{ cards.length }}
           </p>
-
-          <div class="flex flex-col gap-3 lg:overflow-y-auto lg:max-h-[calc(100vh-16rem)] pr-1">
+          <div class="flex flex-col gap-3">
             <CardEditor
               v-for="(card, i) in cards"
               :key="i"
@@ -261,11 +259,24 @@ async function saveDeck() {
               @delete="removeCard(i)"
             />
           </div>
+        </div>
 
-          <Button variant="ghost" @click="addCard">+ Add Card</Button>
-        </template>
       </div>
-
-    </div>
+    </template>
   </div>
+
+  <!-- Fixed action bar: phase 2 only, always visible -->
+  <Teleport to="body">
+    <div v-if="generated" class="fixed bottom-0 left-0 right-0 z-40 bg-cyber-bg/95 backdrop-blur-sm border-t border-cyber-border">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6 py-3 grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4 lg:gap-8 items-center">
+        <div class="flex flex-col gap-1">
+          <p v-if="saveError" class="font-mono-cyber text-xs text-red-400">{{ saveError }}</p>
+          <Button variant="primary" :disabled="!canSave || saving" @click="saveDeck">
+            {{ saving ? 'Saving…' : 'Save Deck' }}
+          </Button>
+        </div>
+        <Button variant="ghost" @click="addCard">+ Add Card</Button>
+      </div>
+    </div>
+  </Teleport>
 </template>
