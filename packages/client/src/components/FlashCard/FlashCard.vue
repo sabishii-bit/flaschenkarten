@@ -17,13 +17,14 @@ defineExpose({ flip })
 
 <template>
   <div
-    class="w-full cursor-pointer select-none perspective-[1200px]"
+    class="relative w-full cursor-pointer select-none perspective-[1200px]"
     :class="[
-      props.size === 'sm' && !disabled ? 'transition-transform duration-200 hover:-translate-y-2 hover:scale-[1.02]' : '',
+      props.size === 'sm' && !disabled ? 'transition-transform duration-200 hover:-translate-y-2' : '',
       { 'cursor-not-allowed opacity-50': disabled },
     ]"
     @click="flip"
   >
+    <slot name="overlay" />
     <div
       class="relative w-full preserve-3d transition-transform duration-500 ease-in-out"
       :class="[sizeClass[props.size], { 'rotate-y-180': isFlipped }]"

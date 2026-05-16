@@ -7,6 +7,7 @@ import FlashCard from '../components/FlashCard/FlashCard.vue'
 import LikeBar from '../components/LikeBar/LikeBar.vue'
 import StarButton from '../components/StarButton/StarButton.vue'
 import { Trash2 } from '@lucide/vue'
+import Checkbox from '../components/Checkbox/Checkbox.vue'
 import type { DeckWithCards } from '@flaschenkarten/shared'
 
 const route        = useRoute()
@@ -39,6 +40,7 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
 
 function toggleCard(cardId: string) {
   if (selectedIds.value.has(cardId)) selectedIds.value.delete(cardId)
@@ -155,37 +157,32 @@ async function deleteDeck() {
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div
+          <FlashCard
             v-for="card in deck.cards"
             :key="card.id"
-            class="relative"
+            size="sm"
           >
-            <!-- Checkbox -->
-            <button
-              class="absolute top-2.5 left-2.5 z-10 w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-150 cursor-pointer"
-              :class="selectedIds.has(card.id)
-                ? 'bg-cyber-purple border-cyber-purple'
-                : 'bg-cyber-surface border-cyber-border hover:border-cyber-purple/60'"
-              @click.stop="toggleCard(card.id)"
-            >
-              <span v-if="selectedIds.has(card.id)" class="text-white text-[10px] leading-none font-bold">✓</span>
-            </button>
-
-            <FlashCard size="sm">
-              <template #front>
-                <span class="font-mono-cyber text-cyber-white text-sm text-center leading-relaxed">
-                  {{ card.front }}
-                </span>
-              </template>
-              <template #back>
-                <span class="font-mono-cyber text-cyber-white text-sm text-center leading-relaxed">
-                  {{ card.back }}
-                </span>
-              </template>
-            </FlashCard>
-          </div>
+            <template #overlay>
+              <Checkbox
+                class="absolute top-12 left-3 z-10"
+                :checked="selectedIds.has(card.id)"
+                @toggle="toggleCard(card.id)"
+              />
+            </template>
+            <template #front>
+              <span class="font-mono-cyber text-cyber-white text-sm text-center leading-relaxed">
+                {{ card.front }}
+              </span>
+            </template>
+            <template #back>
+              <span class="font-mono-cyber text-cyber-white text-sm text-center leading-relaxed">
+                {{ card.back }}
+              </span>
+            </template>
+          </FlashCard>
         </div>
       </div>
     </template>
   </div>
 </template>
+
