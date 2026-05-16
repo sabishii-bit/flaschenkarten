@@ -24,6 +24,7 @@ services:
       - packages/server/.env.production
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-flaschenkarten}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-flaschenkarten}
+      CORS_ORIGIN: https://fk.nullptr.fail
     ports:
       - "${PORT:-3000}:3000"
     depends_on:
