@@ -8,6 +8,7 @@ export const DeckSchema = z.object({
   description: z.string().max(500).default(''),
   isPublic:      z.boolean().default(true),
   requiresAnswer: z.boolean().default(false),
+  hashtags:      z.array(z.string().min(1)).min(0).max(20).default([]),
   createdAt:     z.iso.datetime(),
   updatedAt:   z.iso.datetime(),
 })

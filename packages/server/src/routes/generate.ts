@@ -14,6 +14,7 @@ const GeneratedDeckSchema = z.object({
   title:          z.string(),
   description:    z.string(),
   requiresAnswer: z.boolean(),
+  hashtags:       z.array(z.string()).min(3).max(20),
   cards:          z.array(z.object({
     front:           z.string(),
     back:            z.string(),
@@ -28,6 +29,7 @@ const SYSTEM_PROMPT = `You are a flashcard deck generator. Given a topic or prom
   "title": "<concise deck title, max 120 chars>",
   "description": "<one or two sentence description, max 500 chars>",
   "requiresAnswer": <true if the topic naturally suits typed-answer testing (e.g. vocabulary, definitions, formulas, translations); false for conceptual or open-ended topics>,
+  "hashtags": ["#tag1", "#tag2", ...],
   "cards": [
     {
       "front": "<question or term>",
@@ -40,7 +42,8 @@ Rules:
 - Generate exactly the number of cards requested.
 - Make cards clear, concise and educational.
 - "acceptedAnswers" must always be a non-empty array containing at least the primary answer from "back". Add extra entries only for genuinely valid alternatives (synonyms, abbreviations, alternate spellings, or equivalent forms). Do not pad with near-duplicates.
-- If "requiresAnswer" is true, keep answers short and unambiguous so they can be typed accurately.`
+- If "requiresAnswer" is true, keep answers short and unambiguous so they can be typed accurately.
+- "hashtags" must be an array of 3 to 20 lowercase tags, each starting with '#', containing only letters, digits, or underscores, and relevant to the deck topic.`
 
 export const generateRoutes = app
 

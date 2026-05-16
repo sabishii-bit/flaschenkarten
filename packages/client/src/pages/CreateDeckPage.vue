@@ -23,6 +23,7 @@ const title          = ref('')
 const description    = ref('')
 const isPublic       = ref(true)
 const requiresAnswer = ref(false)
+const hashtags       = ref<string[]>([])
 const cards          = ref<CardEditorCard[]>([{ front: '', back: '', acceptedAnswers: [] }])
 const activeIndex    = ref(0)
 const saving         = ref(false)
@@ -69,6 +70,7 @@ async function saveDeck() {
       description:    description.value,
       isPublic:       isPublic.value,
       requiresAnswer: requiresAnswer.value,
+      hashtags:       hashtags.value,
       cards:          cards.value.filter(c => c.front.trim() || c.back.trim()),
     })
     router.push(`/decks/${deck.id}`)
@@ -91,9 +93,9 @@ async function saveDeck() {
         </div>
 
         <DeckMetaFields
-          :title="title" :description="description" :is-public="isPublic" :requires-answer="requiresAnswer"
+          :title="title" :description="description" :is-public="isPublic" :requires-answer="requiresAnswer" :hashtags="hashtags"
           @update:title="title = $event" @update:description="description = $event"
-          @update:is-public="isPublic = $event" @update:requires-answer="requiresAnswer = $event"
+          @update:is-public="isPublic = $event" @update:requires-answer="requiresAnswer = $event" @update:hashtags="hashtags = $event"
         />
 
         <div class="border-t border-cyber-border" />

@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { and, eq, lt, asc, desc } from 'drizzle-orm'
+import { eq, asc, sql } from 'drizzle-orm'
 import { db } from '../db/index.js'
 import { decks, flashCards } from '../db/schema.js'
 import { getIp } from '../lib/getIp.js'
@@ -11,6 +11,7 @@ const CreateDeckBodySchema = z.object({
   description:    z.string().max(500).default(''),
   isPublic:       z.boolean().default(true),
   requiresAnswer: z.boolean().default(false),
+  hashtags:       z.array(z.string().min(1)).min(0).max(20).default([]),
   cards:          z.array(z.object({
     front:           z.string().min(1),
     back:            z.string().min(1),
@@ -22,26 +23,67 @@ export const deckRoutes = new Hono()
 
 const PAGE_SIZE = 12
 
-// GET /api/decks — paginated public decks, cursor = createdAt of last seen item
+// GET /api/decks — paginated public decks, ranked by engagement score
+// score = (likes × 2) + (favorites × 3) - (dislikes × 1)
+// cursor = "${score}~${id}" (opaque, keyset pagination)
 deckRoutes.get('/', async (c) => {
-  const cursor = c.req.query('cursor')   // ISO datetime string, optional
+  const cursor = c.req.query('cursor')
   const limit  = Math.min(Number(c.req.query('limit') ?? PAGE_SIZE), 50)
 
-  const conditions = cursor
-    ? and(eq(decks.isPublic, true), lt(decks.createdAt, new Date(cursor)))
-    : eq(decks.isPublic, true)
+  let lastScore: number | null = null
+  let lastId: string | null    = null
+  if (cursor) {
+    const sep = cursor.indexOf('~')
+    lastScore = Number(cursor.slice(0, sep))
+    lastId    = cursor.slice(sep + 1)
+  }
 
-  // Fetch one extra to know if a next page exists
-  const rows = await db
-    .select()
-    .from(decks)
-    .where(conditions)
-    .orderBy(desc(decks.createdAt))
-    .limit(limit + 1)
+  const cursorClause = lastScore !== null && lastId !== null
+    ? sql`AND (score < ${lastScore} OR (score = ${lastScore} AND id < ${lastId}))`
+    : sql``
 
-  const hasMore   = rows.length > limit
-  const items     = hasMore ? rows.slice(0, limit) : rows
-  const nextCursor = hasMore ? items[items.length - 1].createdAt.toISOString() : null
+  type ScoredRow = {
+    id: string; author_id: string | null; title: string; description: string
+    is_public: boolean; requires_answer: boolean; hashtags: string[]
+    created_at: Date; updated_at: Date; score: number
+  }
+
+  const rows = (await db.execute(sql`
+    WITH scored AS (
+      SELECT
+        d.id, d.author_id, d.title, d.description, d.is_public, d.requires_answer,
+        d.hashtags, d.created_at, d.updated_at,
+        COALESCE((
+          SELECT SUM(CASE WHEN vote = 'like' THEN 2 ELSE -1 END)
+          FROM deck_votes WHERE deck_id = d.id
+        ), 0) +
+        COALESCE((
+          SELECT COUNT(*) * 3
+          FROM deck_favorites WHERE deck_id = d.id
+        ), 0) AS score
+      FROM decks d
+      WHERE d.is_public = true
+    )
+    SELECT * FROM scored
+    WHERE true ${cursorClause}
+    ORDER BY score DESC, id DESC
+    LIMIT ${limit + 1}
+  `)) as ScoredRow[]
+
+  const hasMore    = rows.length > limit
+  const page       = hasMore ? rows.slice(0, limit) : rows
+  const nextCursor = hasMore
+    ? `${page[page.length - 1].score}~${page[page.length - 1].id}`
+    : null
+
+  const items = page.map(({ score: _s, author_id, is_public, requires_answer, created_at, updated_at, ...rest }) => ({
+    ...rest,
+    authorId:       author_id,
+    isPublic:       is_public,
+    requiresAnswer: requires_answer,
+    createdAt:      created_at instanceof Date ? created_at.toISOString() : created_at,
+    updatedAt:      updated_at instanceof Date ? updated_at.toISOString() : updated_at,
+  }))
 
   return c.json<ApiResponse<{ decks: Deck[]; nextCursor: string | null }>>({
     data: { decks: items as Deck[], nextCursor },
@@ -60,12 +102,12 @@ deckRoutes.post('/', async (c) => {
     )
   }
 
-  const { title, description, isPublic, requiresAnswer, cards: cardEntries } = parsed.data
+  const { title, description, isPublic, requiresAnswer, hashtags, cards: cardEntries } = parsed.data
 
   const deck = await db.transaction(async (tx) => {
     const [created] = await tx
       .insert(decks)
-      .values({ title, description, isPublic, requiresAnswer, authorId })
+      .values({ title, description, isPublic, requiresAnswer, hashtags, authorId })
       .returning()
 
     await tx.insert(flashCards).values(
@@ -123,12 +165,12 @@ deckRoutes.put('/:id', async (c) => {
     )
   }
 
-  const { title, description, isPublic, requiresAnswer, cards: cardEntries } = parsed.data
+  const { title, description, isPublic, requiresAnswer, hashtags, cards: cardEntries } = parsed.data
 
   const deck = await db.transaction(async (tx) => {
     const [updated] = await tx
       .update(decks)
-      .set({ title, description, isPublic, requiresAnswer })
+      .set({ title, description, isPublic, requiresAnswer, hashtags })
       .where(eq(decks.id, id))
       .returning()
 

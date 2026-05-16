@@ -2,13 +2,15 @@
 import TextInput from '../TextInput/TextInput.vue'
 import TextArea from '../TextArea/TextArea.vue'
 import DeckToggle from '../DeckToggle/DeckToggle.vue'
+import DeckHashtagField from '../DeckHashtagField/DeckHashtagField.vue'
 
-defineProps<{ title: string; description: string; isPublic: boolean; requiresAnswer: boolean }>()
+defineProps<{ title: string; description: string; isPublic: boolean; requiresAnswer: boolean; hashtags: string[] }>()
 defineEmits<{
   'update:title':         [v: string]
   'update:description':   [v: string]
   'update:isPublic':      [v: boolean]
   'update:requiresAnswer':[v: boolean]
+  'update:hashtags':      [v: string[]]
 }>()
 </script>
 
@@ -40,6 +42,10 @@ defineEmits<{
       on-text="Studiers must type an answer"
       off-text="Flip-only mode"
       @update:model-value="$emit('update:requiresAnswer', $event)"
+    />
+    <DeckHashtagField
+      :model-value="hashtags"
+      @update:model-value="$emit('update:hashtags', $event)"
     />
   </div>
 </template>

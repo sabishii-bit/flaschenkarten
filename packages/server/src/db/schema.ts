@@ -19,6 +19,7 @@ export const decks = pgTable('decks', {
   description: text('description').notNull().default(''),
   isPublic:      boolean('is_public').notNull().default(true),
   requiresAnswer: boolean('requires_answer').notNull().default(false),
+  hashtags:      text('hashtags').array().notNull().default(sql`'{}'`),
   ...timestamps,
 })
 

@@ -16,6 +16,7 @@ interface GeneratedDeck {
   title: string
   description: string
   requiresAnswer: boolean
+  hashtags: string[]
   cards: CardEditorCard[]
 }
 
@@ -39,6 +40,7 @@ const title          = ref('')
 const description    = ref('')
 const isPublic       = ref(true)
 const requiresAnswer = ref(false)
+const hashtags       = ref<string[]>([])
 const cards          = ref<CardEditorCard[]>([])
 const activeIndex    = ref(0)
 const saving         = ref(false)
@@ -62,6 +64,7 @@ async function generate() {
     title.value          = data.title
     description.value    = data.description
     requiresAnswer.value = data.requiresAnswer
+    hashtags.value       = data.hashtags
     cards.value          = data.cards.map(c => ({ ...c }))
     activeIndex.value    = 0
     syncScrollLock()
@@ -111,6 +114,7 @@ async function saveDeck() {
       description:    description.value,
       isPublic:       isPublic.value,
       requiresAnswer: requiresAnswer.value,
+      hashtags:       hashtags.value,
       cards:          cards.value.filter(c => c.front.trim() || c.back.trim()),
     })
     router.push(`/decks/${deck.id}`)
@@ -166,13 +170,10 @@ async function saveDeck() {
 
         <!-- Phase 2: edit -->
         <template v-else>
-          <div class="flex items-start justify-between gap-2">
-            <div>
-              <p class="font-mono-cyber text-cyber-purple text-xs tracking-[0.3em] uppercase mb-2">// new deck</p>
-              <h2 class="font-orbitron text-2xl font-bold text-cyber-white">{{ title || 'Generated Deck' }}</h2>
-            </div>
+          <div class="flex items-center justify-between gap-2">
+            <p class="font-mono-cyber text-cyber-purple text-xs tracking-[0.3em] uppercase">// new deck</p>
             <button
-              class="font-mono-cyber text-xs text-cyber-muted hover:text-cyber-white transition-colors shrink-0 mt-1"
+              class="font-mono-cyber text-xs text-cyber-muted hover:text-cyber-white transition-colors shrink-0"
               @click="regenerate"
             >
               ← Regenerate
@@ -180,9 +181,9 @@ async function saveDeck() {
           </div>
 
           <DeckMetaFields
-            :title="title" :description="description" :is-public="isPublic" :requires-answer="requiresAnswer"
+            :title="title" :description="description" :is-public="isPublic" :requires-answer="requiresAnswer" :hashtags="hashtags"
             @update:title="title = $event" @update:description="description = $event"
-            @update:is-public="isPublic = $event" @update:requires-answer="requiresAnswer = $event"
+            @update:is-public="isPublic = $event" @update:requires-answer="requiresAnswer = $event" @update:hashtags="hashtags = $event"
           />
 
           <div class="border-t border-cyber-border" />

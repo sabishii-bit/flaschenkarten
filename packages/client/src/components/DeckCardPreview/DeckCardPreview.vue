@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import FlashCard from '../FlashCard/FlashCard.vue'
 
-defineProps<{ front: string; back: string; index: number }>()
+withDefaults(defineProps<{ front: string; back: string; index: number; size?: 'default' | 'sm' }>(), { size: 'sm' })
 </script>
 
 <template>
@@ -9,19 +9,19 @@ defineProps<{ front: string; back: string; index: number }>()
     <p class="font-mono-cyber text-cyber-muted text-xs tracking-[0.2em] uppercase">
       // preview — card {{ index + 1 }}
     </p>
-    <FlashCard :key="index">
+    <FlashCard :key="index" :size="size">
       <template #front>
         <span
-          class="font-mono-cyber text-center text-cyber-white text-base leading-relaxed"
-          :class="{ 'text-cyber-muted/50 text-sm': !front }"
+          class="font-mono-cyber text-center text-cyber-white text-sm leading-relaxed break-all w-full"
+          :class="{ 'text-cyber-muted/50': !front }"
         >
           {{ front || '// front' }}
         </span>
       </template>
       <template #back>
         <span
-          class="font-mono-cyber text-center text-cyber-white text-base leading-relaxed"
-          :class="{ 'text-cyber-muted/50 text-sm': !back }"
+          class="font-mono-cyber text-center text-cyber-white text-sm leading-relaxed break-all w-full"
+          :class="{ 'text-cyber-muted/50': !back }"
         >
           {{ back || '// back' }}
         </span>

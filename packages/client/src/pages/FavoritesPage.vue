@@ -69,6 +69,7 @@ function formatDate(iso: string) {
         <span class="absolute top-0 right-0 h-3 w-3 border-t border-r border-yellow-400/30 rounded-tr-xl transition-colors group-hover:border-yellow-400/60" />
         <span class="absolute bottom-0 left-0 h-3 w-3 border-b border-l border-yellow-400/30 rounded-bl-xl transition-colors group-hover:border-yellow-400/60" />
         <span class="absolute bottom-0 right-0 h-3 w-3 border-b border-r border-yellow-400/30 rounded-br-xl transition-colors group-hover:border-yellow-400/60" />
+        <span class="absolute top-3 right-3 text-yellow-400/70 text-sm leading-none group-hover:text-yellow-400 transition-colors">★</span>
 
         <span class="font-orbitron text-cyber-white text-sm font-semibold leading-snug group-hover:text-yellow-400 transition-colors">
           {{ deck.title }}
@@ -80,7 +81,6 @@ function formatDate(iso: string) {
           <span class="font-mono-cyber text-cyber-muted/50 text-[10px] tracking-wide">
             {{ formatDate(deck.createdAt) }}
           </span>
-          <span class="font-mono-cyber text-yellow-400/60 text-xs group-hover:translate-x-0.5 transition-transform">→</span>
         </div>
       </RouterLink>
     </div>

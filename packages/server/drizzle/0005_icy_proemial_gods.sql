@@ -1,0 +1,1 @@
+ALTER TABLE "decks" ADD COLUMN "hashtags" text[] DEFAULT '{}' NOT NULL;

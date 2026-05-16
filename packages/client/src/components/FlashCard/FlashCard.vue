@@ -30,7 +30,7 @@ defineExpose({ flip })
       :class="[sizeClass[props.size], { 'rotate-y-180': isFlipped }]"
     >
       <!-- Front face -->
-      <div class="absolute inset-0 backface-hidden rounded-xl border border-cyber-purple/50 bg-cyber-surface p-8 flex flex-col items-center justify-center glow-purple group">
+      <div class="absolute inset-0 backface-hidden rounded-xl border border-cyber-purple/50 bg-cyber-surface p-8 flex flex-col items-center justify-center overflow-hidden glow-purple group">
         <!-- Corner accents -->
         <span class="absolute top-0 left-0 h-4 w-4 border-t-2 border-l-2 border-cyber-purple rounded-tl-xl" />
         <span class="absolute top-0 right-0 h-4 w-4 border-t-2 border-r-2 border-cyber-purple rounded-tr-xl" />
@@ -47,7 +47,7 @@ defineExpose({ flip })
       </div>
 
       <!-- Back face -->
-      <div class="absolute inset-0 backface-hidden rotate-y-180 rounded-xl border border-cyber-purple bg-cyber-raised p-8 flex flex-col items-center justify-center glow-purple-lg">
+      <div class="absolute inset-0 backface-hidden rotate-y-180 rounded-xl border border-cyber-purple bg-cyber-raised p-8 flex flex-col items-center justify-center overflow-hidden glow-purple-lg">
         <!-- Corner accents -->
         <span class="absolute top-0 left-0 h-4 w-4 border-t-2 border-l-2 border-cyber-purple-lt rounded-tl-xl" />
         <span class="absolute top-0 right-0 h-4 w-4 border-t-2 border-r-2 border-cyber-purple-lt rounded-tr-xl" />

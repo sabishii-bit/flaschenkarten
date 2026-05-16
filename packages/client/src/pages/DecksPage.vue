@@ -12,6 +12,7 @@ const loading     = ref(true)
 const loadingMore = ref(false)
 const error       = ref<string | null>(null)
 const sentinel    = ref<HTMLElement | null>(null)
+const favoriteIds = ref<Set<string>>(new Set())
 
 let observer: IntersectionObserver | null = null
 
@@ -39,9 +40,13 @@ async function loadMore() {
 
 onMounted(async () => {
   try {
-    const page   = await fetchPage()
-    decks.value  = page.decks
-    nextCursor.value = page.nextCursor
+    const [page, favs] = await Promise.all([
+      fetchPage(),
+      get<Deck[]>('/api/favorites').catch(() => [] as Deck[]),
+    ])
+    decks.value      = page.decks
+    nextCursor.value  = page.nextCursor
+    favoriteIds.value = new Set(favs.map(f => f.id))
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to load decks'
   } finally {
@@ -107,14 +112,23 @@ function formatDate(iso: string) {
           v-for="deck in decks"
           :key="deck.id"
           :to="`/decks/${deck.id}`"
-          class="group relative flex flex-col gap-3 px-6 py-5 rounded-xl border border-cyber-border bg-cyber-surface hover:border-cyber-purple/50 hover:bg-cyber-raised hover:glow-purple transition-all duration-200"
+          class="group relative flex flex-col gap-3 px-6 py-5 rounded-xl border border-cyber-border bg-cyber-surface transition-all duration-200"
+          :class="favoriteIds.has(deck.id)
+            ? 'hover:border-yellow-400/40 hover:bg-cyber-raised hover:glow-purple'
+            : 'hover:border-cyber-purple/50 hover:bg-cyber-raised hover:glow-purple'"
         >
-          <span class="absolute top-0 left-0 h-3 w-3 border-t border-l border-cyber-purple/40 rounded-tl-xl transition-colors group-hover:border-cyber-purple" />
-          <span class="absolute top-0 right-0 h-3 w-3 border-t border-r border-cyber-purple/40 rounded-tr-xl transition-colors group-hover:border-cyber-purple" />
-          <span class="absolute bottom-0 left-0 h-3 w-3 border-b border-l border-cyber-purple/40 rounded-bl-xl transition-colors group-hover:border-cyber-purple" />
-          <span class="absolute bottom-0 right-0 h-3 w-3 border-b border-r border-cyber-purple/40 rounded-br-xl transition-colors group-hover:border-cyber-purple" />
+          <span class="absolute top-0 left-0 h-3 w-3 border-t border-l rounded-tl-xl transition-colors"
+            :class="favoriteIds.has(deck.id) ? 'border-yellow-400/30 group-hover:border-yellow-400/60' : 'border-cyber-purple/40 group-hover:border-cyber-purple'" />
+          <span class="absolute top-0 right-0 h-3 w-3 border-t border-r rounded-tr-xl transition-colors"
+            :class="favoriteIds.has(deck.id) ? 'border-yellow-400/30 group-hover:border-yellow-400/60' : 'border-cyber-purple/40 group-hover:border-cyber-purple'" />
+          <span class="absolute bottom-0 left-0 h-3 w-3 border-b border-l rounded-bl-xl transition-colors"
+            :class="favoriteIds.has(deck.id) ? 'border-yellow-400/30 group-hover:border-yellow-400/60' : 'border-cyber-purple/40 group-hover:border-cyber-purple'" />
+          <span class="absolute bottom-0 right-0 h-3 w-3 border-b border-r rounded-br-xl transition-colors"
+            :class="favoriteIds.has(deck.id) ? 'border-yellow-400/30 group-hover:border-yellow-400/60' : 'border-cyber-purple/40 group-hover:border-cyber-purple'" />
+          <span v-if="favoriteIds.has(deck.id)" class="absolute top-3 right-3 text-yellow-400/70 text-sm leading-none group-hover:text-yellow-400 transition-colors">★</span>
 
-          <span class="font-orbitron text-cyber-white text-sm font-semibold leading-snug group-hover:text-cyber-purple-lt transition-colors">
+          <span class="font-orbitron text-cyber-white text-sm font-semibold leading-snug transition-colors"
+            :class="favoriteIds.has(deck.id) ? 'group-hover:text-yellow-400' : 'group-hover:text-cyber-purple-lt'">
             {{ deck.title }}
           </span>
           <span v-if="deck.description" class="font-mono-cyber text-cyber-muted text-xs leading-relaxed line-clamp-2">
@@ -124,7 +138,6 @@ function formatDate(iso: string) {
             <span class="font-mono-cyber text-cyber-muted/50 text-[10px] tracking-wide">
               {{ formatDate(deck.createdAt) }}
             </span>
-            <span class="font-mono-cyber text-cyber-purple text-xs group-hover:translate-x-0.5 transition-transform">→</span>
           </div>
         </RouterLink>
       </div>
