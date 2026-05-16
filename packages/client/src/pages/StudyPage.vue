@@ -254,11 +254,11 @@ function restart() {
                 placeholder="Type your answer…"
                 :disabled="answerChecked"
                 class="flex-1 font-mono-cyber text-sm text-cyber-white bg-cyber-surface border border-cyber-border rounded-lg px-4 py-2.5 outline-none focus:ring-1 focus:ring-cyber-purple placeholder-cyber-muted/50 transition-all disabled:opacity-50"
-                @keydown.enter.stop="!answerChecked && userAnswer.trim() && checkAnswer()"
+                @keydown.enter.stop="!answerChecked && checkAnswer()"
               />
               <Button
                 variant="primary"
-                :disabled="!userAnswer.trim() || answerChecked"
+                :disabled="answerChecked"
                 @click="checkAnswer"
               >
                 Check
