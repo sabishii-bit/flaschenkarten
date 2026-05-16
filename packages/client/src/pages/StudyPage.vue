@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useApi } from '../composables/useApi.ts'
 import FlashCard from '../components/FlashCard/FlashCard.vue'
@@ -15,15 +15,43 @@ const loading      = ref(true)
 const error        = ref<string | null>(null)
 const currentIndex = ref(0)
 const completed    = ref(false)
+const flashCardRef  = ref<InstanceType<typeof FlashCard> | null>(null)
+const answerInputRef = ref<HTMLInputElement | null>(null)
 
 // Answer mode state
 const userAnswer    = ref('')
 const answerChecked = ref(false)
 const answerCorrect = ref(false)
+const correctCount  = ref(0)
 
-const currentCard = computed(() => deck.value?.cards[currentIndex.value])
-const total       = computed(() => deck.value?.cards.length ?? 0)
-const progress    = computed(() => total.value ? ((currentIndex.value + 1) / total.value) * 100 : 0)
+// Timer
+const elapsed     = ref(0)
+const timerHandle = ref<ReturnType<typeof setInterval> | null>(null)
+
+function startTimer() {
+  elapsed.value = 0
+  timerHandle.value = setInterval(() => { elapsed.value += 10 }, 10)
+}
+function stopTimer() {
+  if (timerHandle.value !== null) { clearInterval(timerHandle.value); timerHandle.value = null }
+}
+function formatTime(ms: number) {
+  const m   = Math.floor(ms / 60000)
+  const s   = Math.floor((ms % 60000) / 1000)
+  const mil = ms % 1000
+  return `${m}:${String(s).padStart(2, '0')}.${String(mil).padStart(3, '0')}`
+}
+
+const currentCard  = computed(() => deck.value?.cards[currentIndex.value])
+const total        = computed(() => deck.value?.cards.length ?? 0)
+const progress     = computed(() => total.value ? ((currentIndex.value + 1) / total.value) * 100 : 0)
+const scoreColor   = computed(() => {
+  const ratio = total.value ? correctCount.value / total.value : 0
+  const r = Math.round(248 - 174 * ratio)
+  const g = Math.round(113 + 109 * ratio)
+  const b = Math.round(113 +  15 * ratio)
+  return `rgb(${r}, ${g}, ${b})`
+})
 
 onMounted(async () => {
   try {
@@ -32,13 +60,31 @@ onMounted(async () => {
     error.value = e instanceof Error ? e.message : 'Failed to load deck'
   } finally {
     loading.value = false
+    if (deck.value?.requiresAnswer) {
+      nextTick(() => answerInputRef.value?.focus())
+      startTimer()
+    }
   }
+  document.addEventListener('keydown', onKeydown)
 })
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', onKeydown)
+  stopTimer()
+})
+
+function onKeydown(e: KeyboardEvent) {
+  const tag = (document.activeElement as HTMLElement)?.tagName
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return
+  if (e.key === 'ArrowRight' || (e.key === 'Enter' && (!deck.value?.requiresAnswer || answerChecked.value))) next()
+  else if (e.key === 'ArrowLeft') prev()
+}
 
 watch(currentIndex, () => {
   userAnswer.value    = ''
   answerChecked.value = false
   answerCorrect.value = false
+  if (deck.value?.requiresAnswer) nextTick(() => answerInputRef.value?.focus())
 })
 
 function normalize(s: string) {
@@ -71,6 +117,8 @@ function checkAnswer() {
     return maxLen > 0 && levenshtein(norm, input) / maxLen <= 0.2
   })
   answerChecked.value = true
+  if (answerCorrect.value) correctCount.value++
+  flashCardRef.value?.flip()
 }
 
 function prev() {
@@ -82,6 +130,7 @@ function next() {
     currentIndex.value++
   } else {
     completed.value = true
+    stopTimer()
   }
 }
 
@@ -91,6 +140,8 @@ function restart() {
   userAnswer.value    = ''
   answerChecked.value = false
   answerCorrect.value = false
+  correctCount.value  = 0
+  if (deck.value?.requiresAnswer) startTimer()
 }
 </script>
 
@@ -127,9 +178,18 @@ function restart() {
           <p class="font-orbitron text-xl font-bold text-cyber-white mb-2">
             Deck Complete
           </p>
-          <p class="font-mono-cyber text-cyber-muted text-sm">
-            You reviewed all {{ total }} cards.
-          </p>
+          <template v-if="deck.requiresAnswer">
+            <p class="font-mono-cyber text-cyber-purple text-xs tracking-[0.3em] uppercase">
+              // results
+            </p>
+            <p class="font-mono-cyber text-sm mt-1">
+              <span :style="{ color: scoreColor }">{{ correctCount }}</span>
+              <span class="text-cyber-muted"> / {{ total }} correct</span>
+            </p>
+            <p class="font-mono-cyber text-cyber-muted text-xs mt-1 tabular-nums">
+              {{ formatTime(elapsed) }}
+            </p>
+          </template>
         </div>
         <div class="flex gap-3">
           <Button variant="primary" @click="restart">Study Again</Button>
@@ -152,10 +212,13 @@ function restart() {
           <span class="font-mono-cyber text-cyber-muted text-xs shrink-0">
             {{ currentIndex + 1 }} / {{ total }}
           </span>
+          <span v-if="deck.requiresAnswer" class="font-mono-cyber text-cyber-purple/60 text-xs shrink-0 tabular-nums">
+            {{ formatTime(elapsed) }}
+          </span>
         </div>
 
         <!-- Card — :key forces remount on index change, resetting flip state -->
-        <FlashCard :key="currentIndex">
+        <FlashCard :key="currentIndex" ref="flashCardRef">
           <template #front>
             <span class="font-mono-cyber text-center text-cyber-white text-xl leading-relaxed">
               {{ currentCard?.front }}
@@ -173,12 +236,13 @@ function restart() {
           <div class="mt-6 flex flex-col gap-3">
             <div class="flex gap-2">
               <input
+                ref="answerInputRef"
                 v-model="userAnswer"
                 type="text"
                 placeholder="Type your answer…"
                 :disabled="answerChecked"
                 class="flex-1 font-mono-cyber text-sm text-cyber-white bg-cyber-surface border border-cyber-border rounded-lg px-4 py-2.5 outline-none focus:ring-1 focus:ring-cyber-purple placeholder-cyber-muted/50 transition-all disabled:opacity-50"
-                @keydown.enter="!answerChecked && userAnswer.trim() && checkAnswer()"
+                @keydown.enter.stop="!answerChecked && userAnswer.trim() && checkAnswer()"
               />
               <Button
                 variant="primary"

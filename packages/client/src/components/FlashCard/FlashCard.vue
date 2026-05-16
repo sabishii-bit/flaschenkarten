@@ -11,6 +11,8 @@ function flip() {
   playFlipSound()
   isFlipped.value = !isFlipped.value
 }
+
+defineExpose({ flip })
 </script>
 
 <template>
