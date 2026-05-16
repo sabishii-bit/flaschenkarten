@@ -26,8 +26,10 @@ const PAGE_SIZE = 12
 // GET /api/decks — paginated public decks, ranked by engagement score
 // score = (likes × 2) + (favorites × 3) - (dislikes × 1)
 // cursor = "${score}~${id}" (opaque, keyset pagination)
+// q      = optional search string — matched against title and hashtags (ILIKE)
 deckRoutes.get('/', async (c) => {
   const cursor = c.req.query('cursor')
+  const q      = c.req.query('q')?.trim() ?? ''
   const limit  = Math.min(Number(c.req.query('limit') ?? PAGE_SIZE), 50)
 
   let lastScore: number | null = null
@@ -40,6 +42,13 @@ deckRoutes.get('/', async (c) => {
 
   const cursorClause = lastScore !== null && lastId !== null
     ? sql`AND (score < ${lastScore} OR (score = ${lastScore} AND id < ${lastId}))`
+    : sql``
+
+  const searchClause = q
+    ? sql`AND (
+        d.title ILIKE ${'%' + q + '%'}
+        OR EXISTS (SELECT 1 FROM unnest(d.hashtags) AS tag WHERE tag ILIKE ${'%' + q + '%'})
+      )`
     : sql``
 
   type ScoredRow = {
@@ -62,7 +71,7 @@ deckRoutes.get('/', async (c) => {
           FROM deck_favorites WHERE deck_id = d.id
         ), 0) AS score
       FROM decks d
-      WHERE d.is_public = true
+      WHERE d.is_public = true ${searchClause}
     )
     SELECT * FROM scored
     WHERE true ${cursorClause}
@@ -123,7 +132,7 @@ deckRoutes.post('/', async (c) => {
     return created
   })
 
-  return c.json<ApiResponse<Deck>>({ data: deck as Deck }, 201)
+  return c.json<ApiResponse<Deck>>({ data: deck as unknown as Deck }, 201)
 })
 
 // GET /api/decks/mine — list decks belonging to the requesting user
@@ -135,7 +144,7 @@ deckRoutes.get('/mine', async (c) => {
     .from(decks)
     .where(eq(decks.authorId, authorId))
 
-  return c.json<ApiResponse<Deck[]>>({ data: rows as Deck[] })
+  return c.json<ApiResponse<Deck[]>>({ data: rows as unknown as Deck[] })
 })
 
 // PUT /api/decks/:id — replace deck metadata and all cards (owner only)
@@ -189,7 +198,7 @@ deckRoutes.put('/:id', async (c) => {
     return updated
   })
 
-  return c.json<ApiResponse<Deck>>({ data: deck as Deck })
+  return c.json<ApiResponse<Deck>>({ data: deck as unknown as Deck })
 })
 
 // DELETE /api/decks/:id — delete a deck (owner only)
@@ -235,6 +244,6 @@ deckRoutes.get('/:id', async (c) => {
     .orderBy(asc(flashCards.position))
 
   return c.json<ApiResponse<DeckWithCards>>({
-    data: { ...deck, cards } as DeckWithCards,
+    data: { ...deck, cards } as unknown as DeckWithCards,
   })
 })

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useApi } from '../composables/useApi.ts'
 import Button from '../components/Button/Button.vue'
 import type { Deck } from '@flaschenkarten/shared'
@@ -13,16 +13,46 @@ const loadingMore = ref(false)
 const error       = ref<string | null>(null)
 const sentinel    = ref<HTMLElement | null>(null)
 const favoriteIds = ref<Set<string>>(new Set())
+const query       = ref('')
 
-let observer: IntersectionObserver | null = null
+let observer:    IntersectionObserver | null = null
+let searchTimer: ReturnType<typeof setTimeout> | null = null
 
 interface PageResult { decks: Deck[]; nextCursor: string | null }
 
 async function fetchPage(cursor?: string) {
   const params = new URLSearchParams({ limit: '12' })
-  if (cursor) params.set('cursor', cursor)
+  if (cursor)      params.set('cursor', cursor)
+  if (query.value) params.set('q', query.value)
   return get<PageResult>(`/api/decks?${params}`)
 }
+
+async function resetAndFetch() {
+  loading.value    = true
+  decks.value      = []
+  nextCursor.value = null
+  error.value      = null
+  try {
+    const page       = await fetchPage()
+    decks.value      = page.decks
+    nextCursor.value = page.nextCursor
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Failed to load decks'
+  } finally {
+    loading.value = false
+  }
+  // Sentinel unmounts while loading=true; re-observe the newly mounted element
+  await nextTick()
+  if (observer && sentinel.value) {
+    observer.disconnect()
+    observer.observe(sentinel.value)
+  }
+}
+
+watch(query, () => {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(resetAndFetch, 300)
+})
 
 async function loadMore() {
   if (loadingMore.value || !nextCursor.value) return
@@ -72,7 +102,7 @@ function formatDate(iso: string) {
 <template>
   <div class="animate-slide-up">
     <!-- Header -->
-    <div class="mb-10 flex items-end justify-between gap-4">
+    <div class="mb-6 flex items-end justify-between gap-4">
       <div>
         <p class="font-mono-cyber text-cyber-purple text-xs tracking-[0.3em] uppercase mb-2">
           // explore
@@ -84,6 +114,21 @@ function formatDate(iso: string) {
       <RouterLink to="/decks/new">
         <Button variant="primary">+ New Deck</Button>
       </RouterLink>
+    </div>
+
+    <!-- Search -->
+    <div class="relative mb-8">
+      <input
+        v-model="query"
+        type="text"
+        placeholder="Search for a deck to study"
+        class="w-full font-mono-cyber text-sm text-cyber-white bg-cyber-surface border border-cyber-border rounded-sm px-3 py-2 focus:outline-none focus:border-cyber-purple transition-colors placeholder:text-cyber-muted/50"
+      />
+      <button
+        v-if="query"
+        class="absolute right-3 top-1/2 -translate-y-1/2 font-mono-cyber text-xs text-cyber-muted hover:text-cyber-white transition-colors"
+        @click="query = ''"
+      >✕</button>
     </div>
 
     <!-- Initial load -->
@@ -99,10 +144,13 @@ function formatDate(iso: string) {
       v-else-if="decks.length === 0"
       class="font-mono-cyber text-cyber-muted text-sm text-center py-24 border border-dashed border-cyber-border rounded-lg"
     >
-      // no public decks yet —
-      <RouterLink to="/decks/new" class="text-cyber-purple hover:text-cyber-purple-lt underline underline-offset-2 transition-colors">
-        be the first to create one
-      </RouterLink>
+      <template v-if="query">// no results for "{{ query }}"</template>
+      <template v-else>
+        // no public decks yet —
+        <RouterLink to="/decks/new" class="text-cyber-purple hover:text-cyber-purple-lt underline underline-offset-2 transition-colors">
+          be the first to create one
+        </RouterLink>
+      </template>
     </div>
 
     <template v-else>
