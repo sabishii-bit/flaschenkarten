@@ -2,14 +2,14 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi.ts'
+import { useUndoDelete } from '../composables/useUndoDelete.ts'
 import Button from '../components/Button/Button.vue'
-import TextInput from '../components/TextInput/TextInput.vue'
-import TextArea from '../components/TextArea/TextArea.vue'
-import CardEditor from '../components/CardEditor/CardEditor.vue'
-import FlashCard from '../components/FlashCard/FlashCard.vue'
+import DeckMetaFields from '../components/DeckMetaFields/DeckMetaFields.vue'
+import DeckCardPreview from '../components/DeckCardPreview/DeckCardPreview.vue'
+import DeckCardList from '../components/DeckCardList/DeckCardList.vue'
+import UndoToast from '../components/UndoToast/UndoToast.vue'
+import type { CardEditorCard } from '../components/CardEditor/variants.ts'
 import type { Deck, DeckWithCards } from '@flaschenkarten/shared'
-
-interface CardEntry { front: string; back: string; acceptedAnswers: string[] }
 
 const route         = useRoute()
 const router        = useRouter()
@@ -20,13 +20,14 @@ const title          = ref('')
 const description    = ref('')
 const isPublic       = ref(true)
 const requiresAnswer = ref(false)
-const cards          = ref<CardEntry[]>([])
-const activeIndex = ref(0)
+const cards          = ref<CardEditorCard[]>([])
+const activeIndex    = ref(0)
+const loading        = ref(true)
+const saving         = ref(false)
+const loadError      = ref<string | null>(null)
+const saveError      = ref<string | null>(null)
 
-const loading   = ref(true)
-const saving    = ref(false)
-const loadError = ref<string | null>(null)
-const saveError = ref<string | null>(null)
+const { hasDeleted, deleteCount, record: recordDelete, undo: popUndo } = useUndoDelete<CardEditorCard>()
 
 const activeCard = computed(() => cards.value[activeIndex.value] ?? { front: '', back: '' })
 const canSave    = computed(() =>
@@ -35,11 +36,7 @@ const canSave    = computed(() =>
 )
 
 const lgQuery = window.matchMedia('(min-width: 1024px)')
-
-function syncScrollLock() {
-  document.body.style.overflow = lgQuery.matches ? 'hidden' : ''
-}
-
+function syncScrollLock() { document.body.style.overflow = lgQuery.matches ? 'hidden' : '' }
 onUnmounted(() => { document.body.style.overflow = ''; lgQuery.removeEventListener('change', syncScrollLock) })
 
 onMounted(async () => {
@@ -67,11 +64,19 @@ function addCard() {
 
 function removeCard(i: number) {
   if (cards.value.length === 1) return
+  recordDelete(cards.value[i], i)
   cards.value.splice(i, 1)
   activeIndex.value = Math.min(activeIndex.value, cards.value.length - 1)
 }
 
-function updateCard(i: number, updated: CardEntry) {
+function undoDelete() {
+  const entry = popUndo()
+  if (!entry) return
+  cards.value.splice(entry.index, 0, entry.item)
+  activeIndex.value = entry.index
+}
+
+function updateCard(i: number, updated: CardEditorCard) {
   cards.value[i] = updated
 }
 
@@ -103,67 +108,22 @@ async function saveDeck() {
 
     <div v-else class="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-8 items-start">
 
-      <!-- LEFT: sticky panel — metadata + preview + actions -->
       <div class="lg:sticky lg:top-8 flex flex-col gap-6">
         <div>
           <p class="font-mono-cyber text-cyber-purple text-xs tracking-[0.3em] uppercase mb-2">// edit deck</p>
           <h2 class="font-orbitron text-2xl font-bold text-cyber-white">Edit Deck</h2>
         </div>
 
-        <!-- Metadata -->
-        <div class="flex flex-col gap-4">
-          <TextInput v-model="title" label="Deck Title" placeholder="e.g. Japanese Vocabulary N5" />
-          <TextArea  v-model="description" label="Description" placeholder="What will you study with this deck?" :rows="2" />
-
-          <label class="flex items-center gap-3 cursor-pointer select-none w-fit">
-            <span class="font-mono-cyber text-xs tracking-[0.2em] uppercase text-cyber-muted">Public</span>
-            <div class="relative">
-              <input v-model="isPublic" type="checkbox" class="sr-only" />
-              <div class="w-10 h-5 rounded-full transition-colors duration-200" :class="isPublic ? 'bg-cyber-purple glow-purple' : 'bg-cyber-border'" />
-              <div class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200" :class="isPublic ? 'translate-x-5' : 'translate-x-0'" />
-            </div>
-            <span class="font-mono-cyber text-xs text-cyber-white/60">
-              {{ isPublic ? 'Anyone can view this deck' : 'Only you can view this deck' }}
-            </span>
-          </label>
-
-          <label class="flex items-center gap-3 cursor-pointer select-none w-fit">
-            <span class="font-mono-cyber text-xs tracking-[0.2em] uppercase text-cyber-muted">Answer Mode</span>
-            <div class="relative">
-              <input v-model="requiresAnswer" type="checkbox" class="sr-only" />
-              <div class="w-10 h-5 rounded-full transition-colors duration-200" :class="requiresAnswer ? 'bg-cyber-purple glow-purple' : 'bg-cyber-border'" />
-              <div class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200" :class="requiresAnswer ? 'translate-x-5' : 'translate-x-0'" />
-            </div>
-            <span class="font-mono-cyber text-xs text-cyber-white/60">
-              {{ requiresAnswer ? 'Studiers must type an answer' : 'Flip-only mode' }}
-            </span>
-          </label>
-        </div>
+        <DeckMetaFields
+          :title="title" :description="description" :is-public="isPublic" :requires-answer="requiresAnswer"
+          @update:title="title = $event" @update:description="description = $event"
+          @update:is-public="isPublic = $event" @update:requires-answer="requiresAnswer = $event"
+        />
 
         <div class="border-t border-cyber-border" />
-
-        <!-- Live preview -->
-        <div class="flex flex-col gap-3">
-          <p class="font-mono-cyber text-cyber-muted text-xs tracking-[0.2em] uppercase">
-            // preview — card {{ activeIndex + 1 }}
-          </p>
-          <FlashCard :key="activeIndex">
-            <template #front>
-              <span class="font-mono-cyber text-center text-cyber-white text-base leading-relaxed" :class="{ 'text-cyber-muted/50 text-sm': !activeCard.front }">
-                {{ activeCard.front || '// front' }}
-              </span>
-            </template>
-            <template #back>
-              <span class="font-mono-cyber text-center text-cyber-white text-base leading-relaxed" :class="{ 'text-cyber-muted/50 text-sm': !activeCard.back }">
-                {{ activeCard.back || '// back' }}
-              </span>
-            </template>
-          </FlashCard>
-        </div>
-
+        <DeckCardPreview :front="activeCard.front" :back="activeCard.back" :index="activeIndex" />
         <div class="border-t border-cyber-border" />
 
-        <!-- Actions -->
         <div class="flex flex-col gap-2">
           <p v-if="saveError" class="font-mono-cyber text-xs text-red-400">{{ saveError }}</p>
           <div class="flex gap-3">
@@ -177,29 +137,16 @@ async function saveDeck() {
         </div>
       </div>
 
-      <!-- RIGHT: scrollable card list -->
-      <div class="flex flex-col gap-3">
-        <p class="font-mono-cyber text-cyber-muted text-xs tracking-[0.2em] uppercase">
-          Cards — {{ cards.length }}
-        </p>
-
-        <div class="flex flex-col gap-3 lg:overflow-y-auto lg:max-h-[calc(100vh-16rem)] pr-1">
-          <CardEditor
-            v-for="(card, i) in cards"
-            :key="i"
-            :card="card"
-            :index="i"
-            :is-active="i === activeIndex"
-            :requires-answer="requiresAnswer"
-            @select="activeIndex = i"
-            @update:card="updateCard(i, $event)"
-            @delete="removeCard(i)"
-          />
-        </div>
-
-        <Button variant="ghost" @click="addCard">+ Add Card</Button>
-      </div>
+      <DeckCardList
+        :cards="cards" :active-index="activeIndex" :requires-answer="requiresAnswer"
+        @select="activeIndex = $event"
+        @update:card="(i, card) => updateCard(i, card)"
+        @delete="removeCard($event)"
+        @add="addCard"
+      />
 
     </div>
   </div>
+
+  <UndoToast :visible="hasDeleted" :count="deleteCount" @undo="undoDelete" />
 </template>

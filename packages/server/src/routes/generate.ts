@@ -82,7 +82,8 @@ app.post('/generate', async (c) => {
 
   let deck: GeneratedDeck
   try {
-    const json = JSON.parse(raw)
+    const stripped = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/,'').trim()
+    const json = JSON.parse(stripped)
     const result = GeneratedDeckSchema.safeParse(json)
     if (!result.success) throw new Error('Response did not match expected shape')
     deck = result.data
