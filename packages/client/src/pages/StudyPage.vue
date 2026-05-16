@@ -55,7 +55,13 @@ const scoreColor   = computed(() => {
 
 onMounted(async () => {
   try {
-    deck.value = await get<DeckWithCards>(`/api/decks/${id}`)
+    const full = await get<DeckWithCards>(`/api/decks/${id}`)
+    const cardFilter = route.query.cards as string | undefined
+    if (cardFilter) {
+      const allowed = new Set(cardFilter.split(','))
+      full.cards = full.cards.filter(c => allowed.has(c.id))
+    }
+    deck.value = full
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to load deck'
   } finally {

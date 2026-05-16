@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi.ts'
 import Button from '../components/Button/Button.vue'
@@ -22,10 +22,15 @@ const confirming = ref(false)
 const deleting   = ref(false)
 const deleteError = ref<string | null>(null)
 
+const selectedIds = ref<Set<string>>(new Set())
+
+const allSelected  = computed(() => deck.value?.cards.every(c => selectedIds.value.has(c.id)) ?? false)
+const noneSelected = computed(() => selectedIds.value.size === 0)
+
 onMounted(async () => {
   try {
     deck.value = await get<DeckWithCards>(`/api/decks/${id}`)
-    // Check ownership: if GET /api/decks/mine contains this deck, it's ours
+    selectedIds.value = new Set(deck.value.cards.map(c => c.id))
     const mine = await get<{ id: string }[]>('/api/decks/mine')
     isOwn.value = mine.some(d => d.id === id)
   } catch (e) {
@@ -34,6 +39,25 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+function toggleCard(cardId: string) {
+  if (selectedIds.value.has(cardId)) selectedIds.value.delete(cardId)
+  else selectedIds.value.add(cardId)
+  selectedIds.value = new Set(selectedIds.value)
+}
+
+function selectAll() {
+  selectedIds.value = new Set(deck.value!.cards.map(c => c.id))
+}
+
+function deselectAll() {
+  selectedIds.value = new Set()
+}
+
+function startStudy() {
+  const cards = [...selectedIds.value].join(',')
+  router.push({ name: 'deck-study', params: { id }, query: { cards } })
+}
 
 async function deleteDeck() {
   if (deleting.value) return
@@ -71,9 +95,9 @@ async function deleteDeck() {
       <div class="flex flex-wrap items-center justify-between gap-3 mt-8">
         <!-- Left: primary actions -->
         <div class="flex items-center gap-3">
-          <RouterLink :to="`/decks/${id}/study`">
-            <Button variant="primary">Study Now</Button>
-          </RouterLink>
+          <Button variant="primary" :disabled="noneSelected" @click="startStudy">
+            Study Now{{ noneSelected ? '' : selectedIds.size < deck.cards.length ? ` (${selectedIds.size})` : '' }}
+          </Button>
           <template v-if="isOwn">
             <RouterLink :to="`/decks/${id}/edit`">
               <Button variant="ghost">Edit Deck</Button>
@@ -113,26 +137,53 @@ async function deleteDeck() {
 
       <!-- Card grid -->
       <div class="mt-10">
-        <p class="font-mono-cyber text-cyber-muted text-xs tracking-[0.2em] uppercase mb-4">
-          Cards — {{ deck.cards.length }}
-        </p>
+        <div class="flex items-center justify-between mb-4">
+          <p class="font-mono-cyber text-cyber-muted text-xs tracking-[0.2em] uppercase">
+            Cards — {{ deck.cards.length }}
+          </p>
+          <div class="flex items-center gap-3">
+            <span class="font-mono-cyber text-cyber-muted/50 text-xs">
+              {{ selectedIds.size }} selected
+            </span>
+            <button
+              class="font-mono-cyber text-xs text-cyber-purple hover:text-cyber-purple-lt transition-colors cursor-pointer"
+              @click="allSelected ? deselectAll() : selectAll()"
+            >
+              {{ allSelected ? 'Deselect all' : 'Select all' }}
+            </button>
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <FlashCard
+          <div
             v-for="card in deck.cards"
             :key="card.id"
-            size="sm"
+            class="relative"
           >
-            <template #front>
-              <span class="font-mono-cyber text-cyber-white text-sm text-center leading-relaxed">
-                {{ card.front }}
-              </span>
-            </template>
-            <template #back>
-              <span class="font-mono-cyber text-cyber-white text-sm text-center leading-relaxed">
-                {{ card.back }}
-              </span>
-            </template>
-          </FlashCard>
+            <!-- Checkbox -->
+            <button
+              class="absolute top-2.5 left-2.5 z-10 w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-150 cursor-pointer"
+              :class="selectedIds.has(card.id)
+                ? 'bg-cyber-purple border-cyber-purple'
+                : 'bg-cyber-surface border-cyber-border hover:border-cyber-purple/60'"
+              @click.stop="toggleCard(card.id)"
+            >
+              <span v-if="selectedIds.has(card.id)" class="text-white text-[10px] leading-none font-bold">✓</span>
+            </button>
+
+            <FlashCard size="sm">
+              <template #front>
+                <span class="font-mono-cyber text-cyber-white text-sm text-center leading-relaxed">
+                  {{ card.front }}
+                </span>
+              </template>
+              <template #back>
+                <span class="font-mono-cyber text-cyber-white text-sm text-center leading-relaxed">
+                  {{ card.back }}
+                </span>
+              </template>
+            </FlashCard>
+          </div>
         </div>
       </div>
     </template>
