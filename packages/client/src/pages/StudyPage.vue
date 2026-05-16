@@ -94,7 +94,13 @@ watch(currentIndex, () => {
 })
 
 function normalize(s: string) {
-  return s.toLowerCase().trim().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ')
+  return s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s]/g, '')
+    .replace(/\s+/g, ' ')
 }
 
 function levenshtein(a: string, b: string): number {

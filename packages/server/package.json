@@ -11,6 +11,7 @@
     "db:studio": "dotenv -e .env.development -- drizzle-kit studio"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.96.0",
     "@flaschenkarten/shared": "workspace:*",
     "@hono/node-server": "^2.0.0",
     "drizzle-orm": "^0.44.0",

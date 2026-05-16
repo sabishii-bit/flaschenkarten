@@ -25,7 +25,8 @@ export const navSections: NavSection[] = [
   {
     eyebrow: '// build',
     items: [
-      { label: 'Create Deck', to: '/decks/new' },
+      { label: 'Create Deck',   to: '/decks/new'      },
+      { label: 'Generate Deck', to: '/decks/generate' },
     ],
   },
 ]

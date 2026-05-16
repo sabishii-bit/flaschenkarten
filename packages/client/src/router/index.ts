@@ -29,6 +29,11 @@ const router = createRouter({
       component: () => import('../pages/CreateDeckPage.vue'),
     },
     {
+      path: '/decks/generate',
+      name: 'decks-generate',
+      component: () => import('../pages/GenerateDeckPage.vue'),
+    },
+    {
       path: '/decks/:id',
       name: 'deck-detail',
       component: () => import('../pages/DeckDetailPage.vue'),

@@ -5,6 +5,7 @@ import type { ApiResponse } from '@flaschenkarten/shared'
 import { deckRoutes } from './routes/decks.js'
 import { voteRoutes } from './routes/votes.js'
 import { favoriteRoutes } from './routes/favorites.js'
+import { generateRoutes } from './routes/generate.js'
 import { ipBan } from './middleware/ipBan.js'
 import { apiKey } from './middleware/apiKey.js'
 
@@ -29,6 +30,7 @@ app.route('/api/decks', deckRoutes)
 app.route('/api/decks', voteRoutes)
 app.route('/api/favorites', favoriteRoutes)
 app.route('/api/decks', favoriteRoutes)
+app.route('/api', generateRoutes)
 
 serve({ fetch: app.fetch, port: PORT }, () => {
   console.log(`Server running on http://localhost:${PORT}`)
