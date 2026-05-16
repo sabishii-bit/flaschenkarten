@@ -1,6 +1,8 @@
+const BASE = import.meta.env.VITE_API_URL ?? ''
+
 export function useApi() {
   async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-    const res = await fetch(path, {
+    const res = await fetch(`${BASE}${path}`, {
       ...init,
       headers: {
         'Content-Type': 'application/json',
