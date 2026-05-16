@@ -11,9 +11,14 @@ const RequestSchema = z.object({
 })
 
 const GeneratedDeckSchema = z.object({
-  title:       z.string(),
-  description: z.string(),
-  cards:       z.array(z.object({ front: z.string(), back: z.string() })),
+  title:          z.string(),
+  description:    z.string(),
+  requiresAnswer: z.boolean(),
+  cards:          z.array(z.object({
+    front:           z.string(),
+    back:            z.string(),
+    acceptedAnswers: z.array(z.string()),
+  })),
 })
 
 type GeneratedDeck = z.infer<typeof GeneratedDeckSchema>
@@ -22,11 +27,20 @@ const SYSTEM_PROMPT = `You are a flashcard deck generator. Given a topic or prom
 {
   "title": "<concise deck title, max 120 chars>",
   "description": "<one or two sentence description, max 500 chars>",
+  "requiresAnswer": <true if the topic naturally suits typed-answer testing (e.g. vocabulary, definitions, formulas, translations); false for conceptual or open-ended topics>,
   "cards": [
-    { "front": "<question or term>", "back": "<answer or definition>" }
+    {
+      "front": "<question or term>",
+      "back": "<primary answer or definition>",
+      "acceptedAnswers": ["<primary answer>", "<alternative phrasing or spelling if applicable>"]
+    }
   ]
 }
-Generate exactly the number of cards requested. Make cards clear, concise and educational.`
+Rules:
+- Generate exactly the number of cards requested.
+- Make cards clear, concise and educational.
+- "acceptedAnswers" must always be a non-empty array containing at least the primary answer from "back". Add extra entries only for genuinely valid alternatives (synonyms, abbreviations, alternate spellings, or equivalent forms). Do not pad with near-duplicates.
+- If "requiresAnswer" is true, keep answers short and unambiguous so they can be typed accurately.`
 
 export const generateRoutes = app
 

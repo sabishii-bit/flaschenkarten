@@ -10,7 +10,7 @@ import { useApi } from '../composables/useApi.ts'
 import type { Deck } from '@flaschenkarten/shared'
 
 interface CardEntry { front: string; back: string; acceptedAnswers: string[] }
-interface GeneratedDeck { title: string; description: string; cards: { front: string; back: string }[] }
+interface GeneratedDeck { title: string; description: string; requiresAnswer: boolean; cards: { front: string; back: string; acceptedAnswers: string[] }[] }
 
 const router    = useRouter()
 const { post }  = useApi()
@@ -59,7 +59,8 @@ async function generate() {
     generated.value = data
     title.value = data.title
     description.value = data.description
-    cards.value = data.cards.map(c => ({ ...c, acceptedAnswers: [] }))
+    requiresAnswer.value = data.requiresAnswer
+    cards.value = data.cards.map(c => ({ ...c }))
     activeIndex.value = 0
   } catch (e) {
     genError.value = e instanceof Error ? e.message : 'Generation failed'
@@ -117,7 +118,7 @@ async function saveDeck() {
     <div class="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-8 items-start">
 
       <!-- LEFT: sticky panel -->
-      <div class="lg:sticky lg:top-8 flex flex-col gap-6">
+      <div class="lg:sticky lg:top-8 flex flex-col gap-6 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto lg:pr-1">
 
         <!-- Phase 1: prompt form -->
         <template v-if="!generated">
