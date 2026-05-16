@@ -4,6 +4,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi.ts'
 import Button from '../components/Button/Button.vue'
 import FlashCard from '../components/FlashCard/FlashCard.vue'
+import LikeBar from '../components/LikeBar/LikeBar.vue'
+import StarButton from '../components/StarButton/StarButton.vue'
 import { Trash2 } from '@lucide/vue'
 import type { DeckWithCards } from '@flaschenkarten/shared'
 
@@ -77,6 +79,7 @@ async function deleteDeck() {
               <Button variant="ghost">Edit Deck</Button>
             </RouterLink>
           </template>
+          <StarButton :deck-id="id" />
         </div>
 
         <!-- Right: delete -->
@@ -100,6 +103,12 @@ async function deleteDeck() {
           </template>
           <p v-if="deleteError" class="font-mono-cyber text-xs text-red-400 w-full text-right">{{ deleteError }}</p>
         </template>
+      </div>
+
+      <!-- Votes -->
+      <div class="mt-8 pt-6 border-t border-cyber-border">
+        <p class="font-mono-cyber text-cyber-muted text-xs tracking-[0.2em] uppercase mb-3">// rate this deck</p>
+        <LikeBar :deck-id="id" />
       </div>
 
       <!-- Card grid -->

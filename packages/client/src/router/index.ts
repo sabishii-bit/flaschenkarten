@@ -19,6 +19,11 @@ const router = createRouter({
       component: () => import('../pages/MyDecksPage.vue'),
     },
     {
+      path: '/favorites',
+      name: 'favorites',
+      component: () => import('../pages/FavoritesPage.vue'),
+    },
+    {
       path: '/decks/new',
       name: 'decks-new',
       component: () => import('../pages/CreateDeckPage.vue'),

@@ -3,6 +3,8 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import type { ApiResponse } from '@flaschenkarten/shared'
 import { deckRoutes } from './routes/decks.js'
+import { voteRoutes } from './routes/votes.js'
+import { favoriteRoutes } from './routes/favorites.js'
 import { ipBan } from './middleware/ipBan.js'
 
 const app = new Hono()
@@ -19,6 +21,9 @@ app.get('/api/health', (c) => {
 })
 
 app.route('/api/decks', deckRoutes)
+app.route('/api/decks', voteRoutes)
+app.route('/api/favorites', favoriteRoutes)
+app.route('/api/decks', favoriteRoutes)
 
 serve({ fetch: app.fetch, port: PORT }, () => {
   console.log(`Server running on http://localhost:${PORT}`)

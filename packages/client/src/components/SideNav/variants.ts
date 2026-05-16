@@ -6,6 +6,7 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
   { eyebrow: '// personal',  label: 'My Decks',     to: '/my-decks'  },
+  { eyebrow: '// personal',  label: 'Favorites',    to: '/favorites' },
   { eyebrow: '// explore',   label: 'Browse Decks', to: '/decks'     },
   { eyebrow: '// build',     label: 'Create Deck',  to: '/decks/new' },
 ]

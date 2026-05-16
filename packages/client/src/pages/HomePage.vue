@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import HeroSection from '../components/HeroSection/HeroSection.vue'
 import FeatureGrid from '../components/FeatureGrid/FeatureGrid.vue'
-import FlashCard from '../components/FlashCard/FlashCard.vue'
 </script>
 
 <template>
