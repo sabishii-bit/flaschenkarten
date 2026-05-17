@@ -43,6 +43,13 @@
       "when": 1778956817315,
       "tag": "0005_icy_proemial_gods",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1779048057586,
+      "tag": "0006_late_tinkerer",
+      "breakpoints": true
     }
   ]
 }

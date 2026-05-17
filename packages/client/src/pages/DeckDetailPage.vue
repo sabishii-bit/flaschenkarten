@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi.ts'
+import { useAdminAuth } from '../composables/useAdminAuth.ts'
 import Button from '../components/Button/Button.vue'
 import FlashCard from '../components/FlashCard/FlashCard.vue'
 import LikeBar from '../components/LikeBar/LikeBar.vue'
@@ -10,10 +11,11 @@ import { Trash2 } from '@lucide/vue'
 import Checkbox from '../components/Checkbox/Checkbox.vue'
 import type { DeckWithCards } from '@flaschenkarten/shared'
 
-const route        = useRoute()
-const router       = useRouter()
-const id           = route.params.id as string
-const { get, del } = useApi()
+const route               = useRoute()
+const router              = useRouter()
+const id                  = route.params.id as string
+const { get, del }        = useApi()
+const { isAuthenticated } = useAdminAuth()
 
 const deck      = ref<DeckWithCards | null>(null)
 const loading   = ref(true)
@@ -33,7 +35,7 @@ onMounted(async () => {
     deck.value = await get<DeckWithCards>(`/api/decks/${id}`)
     selectedIds.value = new Set(deck.value.cards.map(c => c.id))
     const mine = await get<{ id: string }[]>('/api/decks/mine')
-    isOwn.value = mine.some(d => d.id === id)
+    isOwn.value = isAuthenticated.value || mine.some(d => d.id === id)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to load deck'
   } finally {

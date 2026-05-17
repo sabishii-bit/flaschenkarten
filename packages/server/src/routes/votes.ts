@@ -3,6 +3,8 @@ import { and, eq, sql } from 'drizzle-orm'
 import { db } from '../db/index.js'
 import { deckVotes, decks } from '../db/schema.js'
 import { getVisitorId } from '../lib/getVisitorId.js'
+import { getIp } from '../lib/getIp.js'
+import { log } from '../lib/logger.js'
 import type { ApiResponse } from '@flaschenkarten/shared'
 
 export interface VoteSummary {
@@ -66,9 +68,11 @@ voteRoutes.post('/:id/votes', async (c) => {
     } else {
       // Switch vote
       await db.update(deckVotes).set({ vote }).where(eq(deckVotes.id, existing.id))
+      log('vote_cast', voterIp, getIp(c), { deckId, vote })
     }
   } else {
     await db.insert(deckVotes).values({ deckId, voterIp, vote })
+    log('vote_cast', voterIp, getIp(c), { deckId, vote })
   }
 
   // Return fresh counts

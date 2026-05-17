@@ -3,6 +3,8 @@ import { and, eq } from 'drizzle-orm'
 import { db } from '../db/index.js'
 import { deckFavorites, decks } from '../db/schema.js'
 import { getVisitorId } from '../lib/getVisitorId.js'
+import { getIp } from '../lib/getIp.js'
+import { log } from '../lib/logger.js'
 import type { ApiResponse, Deck } from '@flaschenkarten/shared'
 
 export const favoriteRoutes = new Hono()
@@ -32,10 +34,12 @@ favoriteRoutes.post('/:id/favorite', async (c) => {
 
   if (existing) {
     await db.delete(deckFavorites).where(eq(deckFavorites.id, existing.id))
+    log('favorite_removed', userIp, getIp(c), { deckId })
     return c.json<ApiResponse<{ favorited: boolean }>>({ data: { favorited: false } })
   }
 
   await db.insert(deckFavorites).values({ deckId, userIp })
+  log('favorite_added', userIp, getIp(c), { deckId })
   return c.json<ApiResponse<{ favorited: boolean }>>({ data: { favorited: true } })
 })
 

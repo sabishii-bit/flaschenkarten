@@ -48,6 +48,21 @@ const router = createRouter({
       name: 'deck-study',
       component: () => import('../pages/StudyPage.vue'),
     },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: () => import('../pages/AdminPage.vue'),
+    },
+    {
+      path: '/admin/logs',
+      name: 'admin-logs',
+      component: () => import('../pages/AdminLogsPage.vue'),
+    },
+    {
+      path: '/admin/bans',
+      name: 'admin-bans',
+      component: () => import('../pages/AdminBansPage.vue'),
+    },
   ],
 })
 

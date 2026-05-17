@@ -1,6 +1,9 @@
 import { Hono } from 'hono'
 import { z } from 'zod/v4'
 import Anthropic from '@anthropic-ai/sdk'
+import { getVisitorId } from '../lib/getVisitorId.js'
+import { getIp } from '../lib/getIp.js'
+import { log } from '../lib/logger.js'
 import type { ApiResponse } from '@flaschenkarten/shared'
 
 const app = new Hono()
@@ -137,6 +140,7 @@ app.post('/generate', async (c) => {
     return c.json(response, 500)
   }
 
+  log('deck_generated', getVisitorId(c), getIp(c), { prompt, cardCount: deck.cards.length })
   const response: ApiResponse<GeneratedDeck> = { data: deck }
   return c.json(response)
 })

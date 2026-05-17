@@ -2,6 +2,7 @@ export interface InputProps {
   modelValue: string
   placeholder?: string
   label?: string
+  type?: string
 }
 
 export const inputBase =

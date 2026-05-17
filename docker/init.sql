@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS banned_ips (
   ip         TEXT PRIMARY KEY,
+  cookie_id  TEXT,
   reason     TEXT NOT NULL DEFAULT '',
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -42,4 +43,13 @@ CREATE TABLE IF NOT EXISTS flash_cards (
   accepted_answers TEXT[] NOT NULL DEFAULT '{}',
   created_at       TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at       TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS server_logs (
+  id         TEXT PRIMARY KEY,
+  event      TEXT NOT NULL,
+  visitor_id TEXT,
+  ip         TEXT,
+  details    TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );

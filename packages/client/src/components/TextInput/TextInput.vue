@@ -11,6 +11,7 @@ defineEmits<{ 'update:modelValue': [value: string] }>()
       {{ label }}
     </label>
     <input
+      :type="type ?? 'text'"
       :class="inputBase"
       :value="modelValue"
       :placeholder="placeholder"

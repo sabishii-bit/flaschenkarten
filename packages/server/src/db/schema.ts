@@ -3,6 +3,7 @@ import { sql } from 'drizzle-orm'
 
 export const bannedIps = pgTable('banned_ips', {
   ip:        text('ip').primaryKey(),
+  cookieId:  text('cookie_id'),
   reason:    text('reason').notNull().default(''),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
@@ -37,6 +38,15 @@ export const deckFavorites = pgTable('deck_favorites', {
   userIp:    text('user_ip').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (t) => [unique().on(t.deckId, t.userIp)])
+
+export const serverLogs = pgTable('server_logs', {
+  id:        text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  event:     text('event').notNull(),
+  visitorId: text('visitor_id'),
+  ip:        text('ip'),
+  details:   text('details'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
 
 export const flashCards = pgTable('flash_cards', {
   id:       text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),

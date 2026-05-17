@@ -4,6 +4,9 @@ import { eq, asc, sql } from 'drizzle-orm'
 import { db } from '../db/index.js'
 import { decks, flashCards } from '../db/schema.js'
 import { getVisitorId } from '../lib/getVisitorId.js'
+import { getIp } from '../lib/getIp.js'
+import { log } from '../lib/logger.js'
+import { isAdmin } from '../middleware/requireAdmin.js'
 import type { ApiResponse, Deck, DeckWithCards } from '@flaschenkarten/shared'
 
 const CreateDeckBodySchema = z.object({
@@ -132,6 +135,7 @@ deckRoutes.post('/', async (c) => {
     return created
   })
 
+  log('deck_created', authorId, getIp(c), { deckId: deck.id, title: deck.title, cardCount: cardEntries.length })
   return c.json<ApiResponse<Deck>>({ data: deck as unknown as Deck }, 201)
 })
 
@@ -159,7 +163,7 @@ deckRoutes.put('/:id', async (c) => {
       404,
     )
   }
-  if (existing.authorId !== authorId) {
+  if (existing.authorId !== authorId && !isAdmin(c)) {
     return c.json<ApiResponse<never>>(
       { data: undefined as never, error: 'Forbidden' },
       403,
@@ -213,7 +217,7 @@ deckRoutes.delete('/:id', async (c) => {
       404,
     )
   }
-  if (existing.authorId !== authorId) {
+  if (existing.authorId !== authorId && !isAdmin(c)) {
     return c.json<ApiResponse<never>>(
       { data: undefined as never, error: 'Forbidden' },
       403,
@@ -222,6 +226,7 @@ deckRoutes.delete('/:id', async (c) => {
 
   await db.delete(decks).where(eq(decks.id, id))
 
+  log('deck_deleted', authorId, getIp(c), { deckId: id, title: existing.title })
   return c.json<ApiResponse<{ id: string }>>({ data: { id } })
 })
 
