@@ -30,7 +30,7 @@ onUnmounted(() => { document.body.style.overflow = ''; lgQuery.removeEventListen
 
 // Phase 1
 const prompt     = ref('')
-const cardCount  = ref(10)
+const cardCount  = ref<number | null>(null)
 const generating = ref(false)
 const genError   = ref<string | null>(null)
 
@@ -59,7 +59,9 @@ async function generate() {
   generating.value = true
   genError.value = null
   try {
-    const data = await post<GeneratedDeck>('/api/generate', { prompt: prompt.value, cardCount: cardCount.value })
+    const payload: { prompt: string; cardCount?: number } = { prompt: prompt.value }
+    if (cardCount.value) payload.cardCount = cardCount.value
+    const data = await post<GeneratedDeck>('/api/generate', payload)
     generated.value      = data
     title.value          = data.title
     description.value    = data.description
@@ -155,9 +157,10 @@ async function saveDeck() {
                 type="number"
                 min="1"
                 max="50"
-                class="w-full bg-cyber-bg border border-cyber-border rounded-sm px-3 py-2 font-mono-cyber text-sm text-cyber-white focus:outline-none focus:border-cyber-purple transition-colors"
+                placeholder="Let AI decide"
+                class="w-full bg-cyber-bg border border-cyber-border rounded-sm px-3 py-2 font-mono-cyber text-sm text-cyber-white placeholder:text-cyber-muted/40 focus:outline-none focus:border-cyber-purple transition-colors"
               />
-              <p class="font-mono-cyber text-xs text-cyber-muted/60">Between 1 and 50 cards</p>
+              <p class="font-mono-cyber text-xs text-cyber-muted/60">Optional — 1 to 50, or leave blank</p>
             </div>
 
             <p v-if="genError" class="font-mono-cyber text-xs text-red-400">{{ genError }}</p>
