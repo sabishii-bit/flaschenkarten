@@ -63,6 +63,8 @@ const DECK_TOOL: Anthropic.Tool = {
           required: ['front', 'back', 'acceptedAnswers'],
         },
         description: 'The flashcards in the deck.',
+        minItems: 1,
+        maxItems: 50,
       },
     },
     required: ['title', 'description', 'requiresAnswer', 'hashtags', 'cards'],
@@ -73,7 +75,7 @@ const SYSTEM_PROMPT = `You are a flashcard deck generator. The user provides a t
 
 Rules:
 - If a card count is specified, generate exactly that many cards (max 50).
-- If no card count is given, decide the ideal number yourself — enough to cover the topic well, up to 50 cards.
+- If no card count is given, generate only as many cards as the topic strictly requires. Cover each distinct concept, term, or item exactly once — no padding, no bonus cards, no "related" extras. A topic with 33 Cyrillic characters gets 33 cards. A topic with 7 common irregular verbs gets 7 cards. Do not round up or fill to a round number.
 - Cards must be clear, concise and educational.
 - If "requiresAnswer" is true, keep answers short and unambiguous so they can be typed accurately.
 - "acceptedAnswers" must always contain at least the primary answer from "back". Add extras only for genuinely valid alternatives.

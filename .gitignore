@@ -16,6 +16,9 @@ packages/client/.env.production
 packages/client/.env.development
 packages/client/.env.*.local
 
+# Local Docker overrides (dev only — never deploy)
+docker-compose.override.yml
+
 # OS
 .DS_Store
 Thumbs.db

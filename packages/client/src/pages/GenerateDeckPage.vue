@@ -165,9 +165,21 @@ async function saveDeck() {
 
             <p v-if="genError" class="font-mono-cyber text-xs text-red-400">{{ genError }}</p>
 
-            <Button variant="primary" :disabled="!prompt.trim() || generating" @click="generate">
-              {{ generating ? 'Generating…' : 'Generate' }}
-            </Button>
+            <template v-if="generating">
+              <div class="flex flex-col items-center gap-3 py-4">
+                <svg class="animate-spin w-8 h-8 text-cyber-purple" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <p class="font-mono-cyber text-xs text-cyber-muted tracking-[0.2em] uppercase">Generating deck…</p>
+                <p class="font-mono-cyber text-xs text-cyber-muted/50">This may take a moment</p>
+              </div>
+            </template>
+            <template v-else>
+              <Button variant="primary" :disabled="!prompt.trim()" @click="generate">
+                Generate
+              </Button>
+            </template>
           </div>
         </template>
 
