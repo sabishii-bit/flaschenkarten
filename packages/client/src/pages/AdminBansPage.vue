@@ -82,14 +82,40 @@ onMounted(() => fetchBans())
 
     <p v-if="error" class="font-mono-cyber text-xs text-red-400">{{ error }}</p>
 
-    <div class="border border-cyber-border rounded-sm overflow-x-auto">
+    <!-- Mobile cards -->
+    <div class="flex flex-col gap-2 md:hidden">
+      <div
+        v-for="entry in bans"
+        :key="entry.ip"
+        class="flex flex-col gap-1.5 px-4 py-3 border border-cyber-border/40 rounded-sm bg-cyber-surface/30 text-xs font-mono-cyber"
+      >
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-red-400 font-semibold">{{ entry.ip }}</span>
+          <button
+            class="text-cyber-muted hover:text-green-400 transition-colors shrink-0"
+            @click="unban(entry.ip)"
+          >Unban</button>
+        </div>
+        <span class="text-cyber-muted/60">{{ formatDate(entry.createdAt) }}</span>
+        <span v-if="entry.reason" class="text-cyber-muted/70">{{ entry.reason }}</span>
+        <span v-if="entry.cookieId" class="text-cyber-muted/50" :title="entry.cookieId">
+          cookie: {{ entry.cookieId.slice(0, 8) }}…
+        </span>
+      </div>
+      <div v-if="!loading && bans.length === 0" class="px-3 py-8 text-center text-cyber-muted/40 tracking-[0.2em] uppercase text-xs font-mono-cyber">
+        // no banned users
+      </div>
+    </div>
+
+    <!-- Desktop table -->
+    <div class="hidden md:block border border-cyber-border rounded-sm overflow-x-auto">
       <table class="w-full text-xs font-mono-cyber">
         <thead>
           <tr class="border-b border-cyber-border bg-cyber-surface">
             <th class="text-left px-3 py-2 text-cyber-muted tracking-[0.15em] uppercase whitespace-nowrap">IP Address</th>
-            <th class="text-left px-3 py-2 text-cyber-muted tracking-[0.15em] uppercase whitespace-nowrap hidden md:table-cell">Cookie ID</th>
+            <th class="text-left px-3 py-2 text-cyber-muted tracking-[0.15em] uppercase whitespace-nowrap">Cookie ID</th>
             <th class="text-left px-3 py-2 text-cyber-muted tracking-[0.15em] uppercase hidden lg:table-cell">Reason</th>
-            <th class="text-left px-3 py-2 text-cyber-muted tracking-[0.15em] uppercase whitespace-nowrap hidden sm:table-cell">Banned At</th>
+            <th class="text-left px-3 py-2 text-cyber-muted tracking-[0.15em] uppercase whitespace-nowrap">Banned At</th>
             <th class="px-3 py-2" />
           </tr>
         </thead>
@@ -100,13 +126,13 @@ onMounted(() => fetchBans())
             class="border-b border-cyber-border/40 hover:bg-cyber-surface/50 transition-colors"
           >
             <td class="px-3 py-2 text-red-400 whitespace-nowrap">{{ entry.ip }}</td>
-            <td class="px-3 py-2 text-cyber-muted/70 hidden md:table-cell" :title="entry.cookieId ?? ''">
+            <td class="px-3 py-2 text-cyber-muted/70" :title="entry.cookieId ?? ''">
               {{ entry.cookieId ? entry.cookieId.slice(0, 8) + '…' : '—' }}
             </td>
             <td class="px-3 py-2 text-cyber-muted/70 hidden lg:table-cell">
               {{ entry.reason || '—' }}
             </td>
-            <td class="px-3 py-2 text-cyber-muted whitespace-nowrap hidden sm:table-cell">{{ formatDate(entry.createdAt) }}</td>
+            <td class="px-3 py-2 text-cyber-muted whitespace-nowrap">{{ formatDate(entry.createdAt) }}</td>
             <td class="px-3 py-2 text-right">
               <button
                 class="font-mono-cyber text-xs text-cyber-muted hover:text-green-400 transition-colors"

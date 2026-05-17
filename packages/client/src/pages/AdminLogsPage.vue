@@ -203,13 +203,52 @@ onUnmounted(() => observer?.disconnect())
     </div>
 
     <template v-else>
-      <div class="border border-cyber-border rounded-sm overflow-x-auto">
+      <!-- Mobile cards -->
+      <div class="flex flex-col gap-2 md:hidden">
+        <div
+          v-for="entry in logs"
+          :key="entry.id"
+          class="flex flex-col gap-1.5 px-4 py-3 border border-cyber-border/40 rounded-sm bg-cyber-surface/30 text-xs font-mono-cyber"
+        >
+          <div class="flex items-center justify-between gap-2">
+            <span :class="EVENT_COLOURS[entry.event] ?? 'text-cyber-white'" class="font-semibold">
+              {{ EVENT_LABELS[entry.event] ?? entry.event }}
+            </span>
+            <span class="text-cyber-muted/60 shrink-0">{{ formatDate(entry.createdAt) }}</span>
+          </div>
+          <button
+            v-if="entry.ip"
+            class="text-left text-cyber-muted/70 hover:text-red-400 transition-colors disabled:opacity-40 w-fit"
+            :disabled="banning === entry.ip"
+            :title="`Click to ban ${entry.ip}`"
+            @click="banIp(entry.ip)"
+          >{{ entry.ip }}</button>
+          <span v-else class="text-cyber-muted/40">no ip</span>
+          <div v-if="parseDetails(entry.details).length" class="text-cyber-muted/60 flex flex-wrap gap-x-3 gap-y-0.5">
+            <span v-for="part in parseDetails(entry.details)" :key="part.key">
+              <span>{{ part.key }}: </span>
+              <RouterLink
+                v-if="part.link"
+                :to="part.link"
+                class="text-cyber-purple hover:text-cyber-purple-lt underline underline-offset-2"
+              >{{ part.value }}</RouterLink>
+              <span v-else>{{ part.value }}</span>
+            </span>
+          </div>
+        </div>
+        <div v-if="logs.length === 0" class="px-3 py-8 text-center text-cyber-muted/40 tracking-[0.2em] uppercase text-xs font-mono-cyber">
+          // no logs yet
+        </div>
+      </div>
+
+      <!-- Desktop table -->
+      <div class="hidden md:block border border-cyber-border rounded-sm overflow-x-auto">
         <table class="w-full text-xs font-mono-cyber">
           <thead>
             <tr class="border-b border-cyber-border bg-cyber-surface">
               <th class="text-left px-3 py-2 text-cyber-muted tracking-[0.15em] uppercase whitespace-nowrap">Timestamp</th>
               <th class="text-left px-3 py-2 text-cyber-muted tracking-[0.15em] uppercase whitespace-nowrap">Event</th>
-              <th class="text-left px-3 py-2 text-cyber-muted tracking-[0.15em] uppercase whitespace-nowrap hidden md:table-cell">Visitor</th>
+              <th class="text-left px-3 py-2 text-cyber-muted tracking-[0.15em] uppercase whitespace-nowrap">Visitor</th>
               <th class="text-left px-3 py-2 text-cyber-muted tracking-[0.15em] uppercase hidden lg:table-cell">Details</th>
             </tr>
           </thead>
@@ -223,7 +262,7 @@ onUnmounted(() => observer?.disconnect())
               <td class="px-3 py-2 whitespace-nowrap" :class="EVENT_COLOURS[entry.event] ?? 'text-cyber-white'">
                 {{ EVENT_LABELS[entry.event] ?? entry.event }}
               </td>
-              <td class="px-3 py-2 hidden md:table-cell">
+              <td class="px-3 py-2">
                 <button
                   v-if="entry.ip"
                   class="font-mono-cyber text-xs text-cyber-muted/70 hover:text-red-400 transition-colors disabled:opacity-40"
